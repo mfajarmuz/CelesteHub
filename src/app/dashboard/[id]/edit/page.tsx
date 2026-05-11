@@ -58,9 +58,11 @@ const DEFAULT_SECTIONS: Omit<PRDSection, "id">[] = [
 function SectionContent({
   section,
   onUpdate,
+  onTitleUpdate,
 }: {
   section: PRDSection;
   onUpdate: (id: string, content: string) => void;
+  onTitleUpdate: (id: string, title: string) => void;
 }) {
   const [regenerating, setRegenerating] = useState(false);
 
@@ -77,7 +79,10 @@ function SectionContent({
           suppressContentEditableWarning
           className="font-heading text-[24px] font-semibold text-[var(--color-text-primary)] outline-none flex-1"
           onBlur={(e) => {
-            // Keep section title in sync
+            const nextTitle = e.currentTarget.innerText.trim();
+            if (nextTitle && nextTitle !== section.title) {
+              onTitleUpdate(section.id, nextTitle);
+            }
           }}
         >
           {section.title}
@@ -297,10 +302,11 @@ export default function EditorPage() {
           }));
           try {
             const content = JSON.parse(data.prd.content || "{}");
-            if (content.sections && content.sections.length > 0) {
-              parsedSections = content.sections.map((s: any) => ({
-                ...s,
+            if (Array.isArray(content.sections) && content.sections.length > 0) {
+              parsedSections = content.sections.map((s: { id?: string; title?: string; content?: string }) => ({
                 id: s.id || crypto.randomUUID(),
+                title: s.title || "Untitled Section",
+                content: s.content || "",
               }));
             }
           } catch {}
@@ -323,7 +329,13 @@ export default function EditorPage() {
     if (!title.trim()) return;
     setSaving(true);
     try {
-      const content = JSON.stringify({ sections });
+      const content = JSON.stringify({
+        sections,
+        meta: {
+          lastEditedAt: new Date().toISOString(),
+          editorVersion: "mvp-sections-v1",
+        },
+      });
       const res = await fetch(`/api/prds/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -348,6 +360,12 @@ export default function EditorPage() {
   function updateSection(id: string, content: string) {
     setSections((prev) =>
       prev.map((s) => (s.id === id ? { ...s, content } : s))
+    );
+  }
+
+  function updateSectionTitle(id: string, nextTitle: string) {
+    setSections((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, title: nextTitle } : s))
     );
   }
 
@@ -473,6 +491,7 @@ export default function EditorPage() {
                     key={section.id}
                     section={section}
                     onUpdate={updateSection}
+                    onTitleUpdate={updateSectionTitle}
                   />
                 ))}
               </div>
