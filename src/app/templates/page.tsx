@@ -4,25 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  LayoutTemplate,
-  Sparkles,
-  ChevronRight,
-  FileText,
-  Clock,
-  Layers,
-  Check,
-  Loader2,
-  Settings,
-  Bell,
-  Plus,
-  ArrowLeft,
-} from "lucide-react";
-import Link from "next/link";
+import { Sparkles, ArrowRight, Layers, Search, Clock, FileText, X } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -31,146 +13,165 @@ interface Template {
   name: string;
   description: string;
   category: string;
-  structure: string;
   sectionCount: number;
+  gradient: string;
+  dotColor: string;
   isPublic: boolean;
-  usageCount: number;
-  lastUsed: string;
 }
 
-const CATEGORIES = ["All", "Fintech", "E-commerce", "SaaS", "Mobile App", "Umum"];
+const CATEGORIES = ["All Categories", "Umum", "Fintech", "E-commerce", "SaaS B2B", "Mobile App"];
+
+// Gradient helpers per category
+const GRADIENTS: Record<string, string> = {
+  Fintech: "from-[#f0f4ff] to-[#e0e7ff]",
+  "E-commerce": "from-[#fff0f5] to-[#ffe0eb]",
+  "SaaS B2B": "from-[#f0fff4] to-[#d1fae5]",
+  "Mobile App": "from-[#f5f3ff] to-[#ede9fe]",
+  Umum: "from-surface-container-high to-surface-container-low",
+};
+
+const BADGE_COLORS: Record<string, string> = {
+  Fintech: "text-secondary",
+  "E-commerce": "text-[#be0058]",
+  "SaaS B2B": "text-success-green",
+  "Mobile App": "text-ai-accent",
+  Umum: "text-text-primary",
+};
 
 const exampleTemplates: Template[] = [
   {
     id: "t1",
     name: "Payment Gateway Integration",
     description:
-      "Dokumentasi lengkap untuk integrasi payment gateway termasuk Stripe, Midtrans, dan Xendit. Mencakup flow pembayaran, webhook handling, refund, dan dispute management.",
+      "Structured PRD focusing on compliance, security matrices, API endpoints, and transaction flows necessary for modern financial applications.",
     category: "Fintech",
-    sectionCount: 12,
-    usageCount: 48,
-    lastUsed: "2 days ago",
+    sectionCount: 8,
+    gradient: GRADIENTS["Fintech"] || GRADIENTS["Umum"],
+    dotColor: BADGE_COLORS["Fintech"],
     isPublic: true,
-    structure: JSON.stringify({
-      sections: [
-        "executive_summary",
-        "problem_statement",
-        "goals_metrics",
-        "target_users",
-        "feature_requirements",
-        "user_stories",
-        "technical_requirements",
-        "non_functional_requirements",
-        "compliance",
-        "success_criteria",
-        "timeline",
-        "risks",
-      ],
-    }),
   },
   {
     id: "t2",
     name: "Checkout Flow Optimization",
     description:
-      "PRD untuk mengoptimasi flow checkout dengan one-click purchase, saved payment methods, dan guest checkout. Target mengurangi cart abandonment rate hingga 40%.",
+      "Comprehensive template covering cart management, shipping logic, promo code application, and user conversion tracking.",
     category: "E-commerce",
-    sectionCount: 10,
-    usageCount: 35,
-    lastUsed: "5 days ago",
+    sectionCount: 12,
+    gradient: GRADIENTS["E-commerce"] || GRADIENTS["Umum"],
+    dotColor: BADGE_COLORS["E-commerce"],
     isPublic: true,
-    structure: JSON.stringify({
-      sections: [
-        "executive_summary",
-        "problem_statement",
-        "goals_metrics",
-        "customer_journey",
-        "feature_requirements",
-        "user_stories",
-        "ui_ux_requirements",
-        "technical_requirements",
-        "success_criteria",
-        "timeline",
-      ],
-    }),
   },
   {
     id: "t3",
-    name: "User Authentication Revamp",
+    name: "Enterprise Role Management",
     description:
-      "PRD untuk redesign sistem autentikasi dengan dukungan OAuth (Google, Apple), passwordless login, dan biometric authentication.",
-    category: "SaaS",
-    sectionCount: 11,
-    usageCount: 52,
-    lastUsed: "1 week ago",
+      "Detailed documentation for complex permission matrices, tenant architecture, audit logging, and SSO integration requirements.",
+    category: "SaaS B2B",
+    sectionCount: 15,
+    gradient: GRADIENTS["SaaS B2B"] || GRADIENTS["Umum"],
+    dotColor: BADGE_COLORS["SaaS B2B"],
     isPublic: true,
-    structure: JSON.stringify({
-      sections: [],
-    }),
   },
   {
     id: "t4",
-    name: "Push Notification Engine",
+    name: "User Onboarding Flow",
     description:
-      "Dokumentasi untuk sistem push notification terpusat dengan segmentasi user, A/B testing untuk copy, dan analytics dashboard.",
+      "Perfect for native iOS/Android apps. Covers push notification permissions, device state handling, and offline capabilities.",
     category: "Mobile App",
-    sectionCount: 9,
-    usageCount: 27,
-    lastUsed: "2 weeks ago",
+    sectionCount: 10,
+    gradient: GRADIENTS["Mobile App"] || GRADIENTS["Umum"],
+    dotColor: BADGE_COLORS["Mobile App"],
     isPublic: true,
-    structure: JSON.stringify({
-      sections: [],
-    }),
   },
   {
     id: "t5",
-    name: "Referral Program Dashboard",
+    name: "Standard Feature Release",
     description:
-      "PRD untuk referral program dengan tracking link, reward system, leaderboard, dan analytics performa kampanye referral.",
-    category: "SaaS",
-    sectionCount: 10,
-    usageCount: 19,
-    lastUsed: "3 weeks ago",
-    isPublic: true,
-    structure: JSON.stringify({
-      sections: [],
-    }),
-  },
-  {
-    id: "t6",
-    name: "AI-Powered Chatbot untuk CS",
-    description:
-      "Integrasi LLM untuk customer service chatbot dengan intent detection, human handoff, dan knowledge base integration.",
+      "A versatile, all-purpose PRD template suitable for most internal tools or standard feature additions. Includes sections for problem statement, user stories, out-of-scope definitions, and success metrics.",
     category: "Umum",
-    sectionCount: 11,
-    usageCount: 31,
-    lastUsed: "1 month ago",
+    sectionCount: 6,
+    gradient: GRADIENTS["Umum"],
+    dotColor: BADGE_COLORS["Umum"],
     isPublic: true,
-    structure: JSON.stringify({
-      sections: [],
-    }),
   },
 ];
 
+// ─── Mock Preview Card Component ────────────────────────
+
+function MockPreview({ category, isGeneral }: { category: string; isGeneral?: boolean }) {
+  if (isGeneral) {
+    return (
+      <>
+        <div className="w-1/3 h-4 rounded bg-surface-variant"></div>
+        <div className="w-full h-2 rounded bg-surface-variant"></div>
+        <div className="w-full h-2 rounded bg-surface-variant"></div>
+        <div className="w-4/5 h-2 rounded bg-surface-variant"></div>
+      </>
+    );
+  }
+  if (category === "Fintech") {
+    return (
+      <>
+        <div className="w-1/2 h-2 bg-surface-variant rounded mb-2"></div>
+        <div className="w-full h-2 bg-surface-variant rounded mb-1"></div>
+        <div className="w-5/6 h-2 bg-surface-variant rounded mb-3"></div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="h-8 bg-surface-variant rounded"></div>
+          <div className="h-8 bg-surface-variant rounded"></div>
+        </div>
+      </>
+    );
+  }
+  if (category === "E-commerce") {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-surface-variant"></div>
+          <div className="flex-1">
+            <div className="w-full h-3 bg-surface-variant rounded mb-1"></div>
+            <div className="w-1/2 h-2 bg-surface-variant rounded"></div>
+          </div>
+        </div>
+        <div className="w-full h-12 bg-surface-variant rounded"></div>
+      </div>
+    );
+  }
+  if (category === "SaaS B2B") {
+    return (
+      <div className="flex gap-0 h-full">
+        <div className="w-1/4 h-full border-r border-border-subtle pr-2 flex flex-col gap-1">
+          <div className="w-full h-2 bg-surface-variant rounded"></div>
+          <div className="w-full h-2 bg-surface-variant rounded"></div>
+          <div className="w-full h-2 bg-surface-variant rounded"></div>
+        </div>
+        <div className="flex-1 pl-2 flex flex-col gap-2">
+          <div className="w-1/2 h-3 bg-surface-variant rounded"></div>
+          <div className="w-full flex-1 bg-surface-variant rounded"></div>
+        </div>
+      </div>
+    );
+  }
+  if (category === "Mobile App") {
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <div className="w-8 h-8 rounded-full bg-surface-variant mb-2"></div>
+        <div className="w-full h-2 bg-surface-variant rounded mb-1"></div>
+        <div className="w-3/4 h-2 bg-surface-variant rounded"></div>
+      </div>
+    );
+  }
+  return (
+    <div className="w-1/2 h-2 bg-surface-variant rounded mb-2"></div>
+  );
+}
+
 // ─── Template Card ────────────────────────────────────────
 
-const categoryColors: Record<string, string> = {
-  Fintech: "bg-emerald-100 text-emerald-800",
-  "E-commerce": "bg-blue-100 text-blue-800",
-  SaaS: "bg-purple-100 text-purple-800",
-  "Mobile App": "bg-orange-100 text-orange-800",
-  Umum: "bg-slate-100 text-slate-800",
-};
-
-function TemplateCard({
-  template,
-}: {
-  template: Template;
-}) {
+function TemplateCard({ template }: { template: Template }) {
   const router = useRouter();
-  const [using, setUsing] = useState(false);
+  const isGeneral = template.id === "t5";
 
-  async function handleUseTemplate() {
-    setUsing(true);
+  async function handleUse() {
     try {
       const res = await fetch("/api/prds", {
         method: "POST",
@@ -185,14 +186,10 @@ function TemplateCard({
       if (res.ok && data.prd) {
         router.push(`/dashboard/${data.prd.id}/edit`);
       } else {
-        // Fallback: create a PRD with this name anyway
         const res2 = await fetch("/api/prds", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: `PRD — ${template.name}`,
-            language: "id",
-          }),
+          body: JSON.stringify({ title: `PRD — ${template.name}`, language: "id" }),
         });
         const data2 = await res2.json();
         if (res2.ok && data2.prd) {
@@ -200,240 +197,136 @@ function TemplateCard({
         }
       }
     } catch (err) {
-      console.error("Failed to use template:", err);
-    } finally {
-      setUsing(false);
+      console.error("Failed:", err);
     }
   }
 
+  const gridClass = isGeneral
+    ? "col-span-1 md:col-span-2 lg:col-span-2"
+    : "col-span-1";
+
   return (
-    <div className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group flex flex-col">
-      {/* Header */}
-      <div className="p-5 flex-1">
-        {/* Category + Usage */}
-        <div className="flex items-center justify-between mb-3">
-          <span
-            className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-              categoryColors[template.category] ||
-              "bg-[var(--color-surface-container)] text-[var(--color-on-surface)]"
-            }`}
-          >
-            {template.category}
-          </span>
-          <span className="text-[11px] text-[var(--color-text-secondary)] flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {template.lastUsed}
-          </span>
-        </div>
-
-        {/* Icon + Title */}
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-[var(--color-surface-container-low)] flex items-center justify-center flex-shrink-0">
-            <LayoutTemplate className="w-5 h-5 text-[var(--color-text-primary)]" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-heading text-[15px] font-semibold text-[var(--color-text-primary)] leading-snug line-clamp-2">
-              {template.name}
-            </h3>
-          </div>
-        </div>
-
-        {/* Description */}
-        <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed line-clamp-3 mb-4">
-          {template.description}
-        </p>
-
-        {/* Sections count + Usage count */}
-        <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
-          <span className="flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5" />
-            {template.sectionCount} sections
-          </span>
-          <span className="flex items-center gap-1">
-            <FileText className="w-3.5 h-3.5" />
-            {template.usageCount} uses
-          </span>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="px-5 pb-5">
-        <Button
-          className="w-full gap-1.5"
-          size="sm"
-          onClick={handleUseTemplate}
-          loading={using}
-          disabled={using}
+    <div className={`${gridClass}`}>
+      <div className={`bg-surface-canvas border border-border-subtle rounded-xl overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all flex flex-col h-full group`}>
+        {/* Gradient Preview */}
+        <div
+          className={`h-40 bg-gradient-to-br ${template.gradient} relative p-4 flex justify-center items-start overflow-hidden`}
         >
-          {using ? (
-            "Creating..."
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: "radial-gradient(#64748B 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+          ></div>
+          {isGeneral ? (
+            <div className="w-3/4 bg-white rounded-t-lg shadow-sm border border-border-subtle mt-4 p-4 relative z-10 transform group-hover:-translate-y-2 transition-transform duration-300 flex flex-col gap-3">
+              <MockPreview category={template.category} isGeneral />
+            </div>
+          ) : template.category === "Mobile App" ? (
+            <div className="w-[80px] bg-white rounded-t-xl shadow-sm border border-border-subtle mt-4 p-2 relative z-10 transform group-hover:-translate-y-2 transition-transform duration-300 flex flex-col items-center">
+              <MockPreview category={template.category} />
+            </div>
           ) : (
-            <>
-              <Sparkles className="w-3.5 h-3.5" /> Use Template
-            </>
+            <div className="w-3/4 bg-white rounded-t-lg shadow-sm border border-border-subtle mt-4 p-3 relative z-10 transform group-hover:-translate-y-2 transition-transform duration-300">
+              <MockPreview category={template.category} />
+            </div>
           )}
-        </Button>
+          <span
+            className={`absolute top-4 right-4 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold border border-border-subtle ${template.dotColor}`}
+          >
+            {template.category === "Umum" ? "UMUM" : template.category.toUpperCase() === "SAAS B2B" ? "SAAS B2B" : template.category === "Mobile App" ? "MOBILE APP" : template.category.toUpperCase()}
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className={`p-5 flex-1 flex flex-col ${isGeneral ? "justify-center" : ""}`}>
+          <h3 className="font-heading text-xl font-semibold text-primary mb-2">
+            {template.name}
+          </h3>
+          <p className="text-sm text-text-secondary mb-4 flex-1 leading-relaxed">
+            {template.description}
+          </p>
+          <div className="flex items-center justify-between mt-auto">
+            <span className="text-sm text-text-secondary flex items-center gap-1 text-xs">
+              <FileText className="w-3.5 h-3.5" /> {template.sectionCount} Sections
+            </span>
+            {isGeneral ? (
+              <button
+                onClick={handleUse}
+                className="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
+              >
+                Use Template
+                <FileText className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleUse}
+                className="text-primary hover:text-ai-accent text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                Use Template
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Templates Page (Dashboard Layout) ──────────────
+// ─── Main Templates Page ─────────────────────────────────
 
 export default function TemplatesPage() {
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [templates, setTemplates] = useState<Template[]>(exampleTemplates);
-  const [loading, setLoading] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All Categories");
 
-  // Try to fetch from API, fall back to examples
-  useEffect(() => {
-    async function fetchTemplates() {
-      try {
-        const res = await fetch("/api/templates");
-        const data = await res.json();
-        if (data.templates && data.templates.length > 0) {
-          // Merge with example data — use real templates but enrich with display info
-          const enriched = data.templates.map((t: any, i: number) => {
-            const example = exampleTemplates[i] || exampleTemplates[0];
-            let sectionCount = 0;
-            try {
-              const structure = JSON.parse(t.structure || "{}");
-              sectionCount = (structure.sections || []).length;
-            } catch {}
-            return {
-              ...t,
-              sectionCount: sectionCount || example.sectionCount,
-              usageCount: Math.floor(Math.random() * 50) + 10,
-              lastUsed: ["2 days ago", "1 week ago", "3 days ago"][i % 3],
-              category:
-                t.category === "umum"
-                  ? "Umum"
-                  : t.category === "fintech"
-                    ? "Fintech"
-                    : t.category === "ecommerce"
-                      ? "E-commerce"
-                      : t.category === "saas"
-                        ? "SaaS"
-                        : t.category === "mobile"
-                          ? "Mobile App"
-                          : t.category || "Umum",
-              name:
-                i === 0
-                  ? "Payment Gateway Integration"
-                  : i === 1
-                    ? "Checkout Flow Optimization"
-                    : i === 2
-                      ? "User Authentication Revamp"
-                      : i === 3
-                        ? "Push Notification Engine"
-                        : i === 4
-                          ? "Referral Program Dashboard"
-                          : t.name,
-              description:
-                i === 0
-                  ? "Dokumentasi lengkap untuk integrasi payment gateway termasuk Stripe, Midtrans, dan Xendit. Mencakup flow pembayaran, webhook handling, refund, dan dispute management."
-                  : i === 1
-                    ? "PRD untuk mengoptimasi flow checkout dengan one-click purchase, saved payment methods, dan guest checkout. Target mengurangi cart abandonment rate hingga 40%."
-                    : i === 2
-                      ? "PRD untuk redesign sistem autentikasi dengan dukungan OAuth (Google, Apple), passwordless login, dan biometric authentication."
-                      : i === 3
-                        ? "Dokumentasi untuk sistem push notification terpusat dengan segmentasi user, A/B testing untuk copy, dan analytics dashboard."
-                        : i === 4
-                          ? "PRD untuk referral program dengan tracking link, reward system, leaderboard, dan analytics performa kampanye referral."
-                          : t.description,
-            };
-          });
-          setTemplates(enriched);
-        }
-      } catch (err) {
-        // Silently fall back to example templates
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTemplates();
-  }, []);
-
-  const filteredTemplates = templates.filter((t) => {
+  const filteredTemplates = exampleTemplates.filter((t) => {
     const matchesSearch =
       t.name.toLowerCase().includes(search.toLowerCase()) ||
       t.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory =
-      activeCategory === "All" || t.category === activeCategory;
+      activeCategory === "All Categories" || t.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-background)]">
-      {/* Sidebar — same as dashboard */}
+    <div className="min-h-screen bg-surface-background">
       <Sidebar />
-
-      {/* Main content area */}
       <div className="md:ml-64 flex flex-col min-h-screen">
         <DashboardHeader />
-
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-[var(--container-max)] mx-auto space-y-6">
-            {/* Page header */}
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Link
-                  href="/dashboard"
-                  className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <span className="text-xs text-[var(--color-text-secondary)]">
-                  /
-                </span>
-                <span className="text-xs font-semibold text-[var(--color-text-primary)]">
-                  Templates
-                </span>
-              </div>
-              <h1 className="heading-headline-md text-[var(--color-text-primary)]">
+          <div className="max-w-[var(--container-max)] mx-auto">
+            {/* Header */}
+            <div className="mb-6">
+              <h1 className="text-[32px] font-heading font-bold text-primary leading-tight mb-2">
                 Template Library
               </h1>
-              <p className="body-sm text-[var(--color-text-secondary)] mt-1">
-                Choose from our collection of professionally structured PRD
-                templates.
+              <p className="text-base text-text-secondary max-w-2xl">
+                Start your next Product Requirements Document with a solid foundation.
+                Choose from our industry-specific templates designed to capture exactly
+                what you need.
               </p>
             </div>
 
-            {/* Search & Filters */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-secondary)]" />
-                <Input
-                  placeholder="Search templates by name or keyword..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm">
-                  <Settings className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Bell className="w-4 h-4" />
-                </Button>
-                <div className="w-8 h-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center text-white text-xs font-bold">
-                  U
-                </div>
-              </div>
+            {/* Search */}
+            <div className="relative max-w-md mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
+              <input
+                placeholder="Search templates..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border-subtle focus:border-secondary focus:ring-1 focus:ring-secondary outline-none text-sm text-text-primary bg-surface-canvas transition-colors"
+              />
             </div>
 
-            {/* Category filters — "Fintech", "E-commerce" etc */}
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2 mb-6">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-full text-sm transition-colors cursor-pointer ${
                     activeCategory === cat
-                      ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
-                      : "bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)]"
+                      ? "bg-primary text-on-primary border border-primary"
+                      : "bg-surface text-text-secondary border border-border-subtle hover:border-outline"
                   }`}
                 >
                   {cat}
@@ -441,35 +334,27 @@ export default function TemplatesPage() {
               ))}
             </div>
 
-            {/* Template Grid */}
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-[var(--color-text-secondary)]" />
-              </div>
-            ) : filteredTemplates.length === 0 ? (
+            {/* Bento Grid */}
+            {filteredTemplates.length === 0 ? (
               <div className="text-center py-20">
-                <div className="w-16 h-16 rounded-full bg-[var(--color-surface-container-low)] flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-6 h-6 text-[var(--color-text-secondary)]" />
+                <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-6 h-6 text-text-secondary" />
                 </div>
-                <h3 className="font-heading text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+                <h3 className="font-heading text-lg font-semibold text-primary mb-2">
                   No templates found
                 </h3>
-                <p className="body-sm text-[var(--color-text-secondary)] mb-6">
-                  Try adjusting your search or filter to find what you're
-                  looking for.
+                <p className="text-sm text-text-secondary mb-6">
+                  Try adjusting your search or filter.
                 </p>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setSearch("");
-                    setActiveCategory("All");
-                  }}
+                <button
+                  onClick={() => { setSearch(""); setActiveCategory("All Categories"); }}
+                  className="px-4 py-2 rounded-lg bg-primary text-on-primary text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   Reset Filters
-                </Button>
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredTemplates.map((t) => (
                   <TemplateCard key={t.id} template={t} />
                 ))}

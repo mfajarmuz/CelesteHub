@@ -3,33 +3,26 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Modal } from "@/components/ui/modal";
 import {
-  FileText,
   ArrowLeft,
   Sparkles,
-  Save,
-  Download,
-  Eye,
-  EyeOff,
-  Code,
-  Plus,
-  Trash2,
-  GripVertical,
-  ChevronDown,
-  ChevronRight,
   Check,
   X,
   Loader2,
-  Share2,
-  MoreHorizontal,
-  FileDown,
-  Printer,
-  History,
+  Download,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  Link,
+  Image,
+  ChevronDown,
+  Send,
+  Plus,
+  MessageSquare,
 } from "lucide-react";
-import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -37,7 +30,6 @@ interface PRDSection {
   id: string;
   title: string;
   content: string;
-  expanded: boolean;
 }
 
 interface PRDData {
@@ -54,263 +46,225 @@ interface PRDData {
 }
 
 const DEFAULT_SECTIONS: Omit<PRDSection, "id">[] = [
-  { title: "Executive Summary", content: "", expanded: true },
-  { title: "Problem Statement", content: "", expanded: true },
-  { title: "Goals & Success Metrics", content: "", expanded: false },
-  { title: "User Personas", content: "", expanded: false },
-  { title: "Feature Requirements", content: "", expanded: true },
-  { title: "User Stories", content: "", expanded: false },
-  { title: "Technical Requirements", content: "", expanded: false },
-  { title: "Design Specifications", content: "", expanded: false },
-  { title: "Success Criteria", content: "", expanded: false },
-  { title: "Timeline & Milestones", content: "", expanded: false },
-  { title: "Risks & Mitigations", content: "", expanded: false },
-  { title: "Appendix", content: "", expanded: false },
+  { title: "Executive Summary", content: "The objective of this project is to integrate a robust, multi-currency payment gateway into our core SaaS platform. This will enable frictionless checkout experiences for international users, directly addressing the 22% drop-off rate observed in the APAC region due to unsupported local payment methods.\n\nBy implementing this solution, we project an increase in successful conversions by 15% within the first quarter post-launch, alongside a reduction in manual reconciliation efforts for the finance team." },
+  { title: "Problem Statement", content: "Currently, our checkout process only supports major US credit cards and PayPal. Users from Southeast Asia and Europe frequently abandon their carts at the final step when their preferred local payment methods (e.g., GrabPay, iDEAL, SEPA) are unavailable. Furthermore, the lack of localized currency display creates trust friction, forcing users to manually calculate exchange rates before committing to an annual subscription." },
+  { title: "Target Audience", content: "" },
+  { title: "User Stories", content: "" },
+  { title: "Non-Functional Requirements", content: "" },
 ];
 
-// ─── Section Editor Component ─────────────────────────────
+// ─── Section Content Component ────────────────────────────
 
-function SectionEditor({
+function SectionContent({
   section,
   onUpdate,
-  onDelete,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  index,
 }: {
   section: PRDSection;
-  onUpdate: (id: string, updates: Partial<PRDSection>) => void;
-  onDelete: (id: string) => void;
-  onDragStart: (e: React.DragEvent, index: number) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, index: number) => void;
-  index: number;
+  onUpdate: (id: string, content: string) => void;
 }) {
+  const [regenerating, setRegenerating] = useState(false);
+
   return (
-    <div
-      className="border border-[var(--color-border-subtle)] rounded-xl bg-[var(--color-surface-canvas)] overflow-hidden transition-all hover:shadow-sm group"
-      draggable
-      onDragStart={(e) => onDragStart(e, index)}
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, index)}
+    <section
+      id={`section-${section.id}`}
+      className="relative group mb-6 pb-3 border-b border-transparent hover:border-[var(--color-surface-container)] transition-colors"
     >
       {/* Section Header */}
-      <button
-        onClick={() =>
-          onUpdate(section.id, { expanded: !section.expanded })
-        }
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-surface-container-low)] transition-colors cursor-pointer"
-      >
-        <div className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity text-[var(--color-text-secondary)]">
-          <GripVertical className="w-4 h-4" />
-        </div>
-        <div className="flex-1 flex items-center gap-2">
-          {section.expanded ? (
-            <ChevronDown className="w-4 h-4 text-[var(--color-text-secondary)]" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-[var(--color-text-secondary)]" />
-          )}
-          <span className="font-heading text-sm font-semibold text-[var(--color-text-primary)]">
-            {section.title}
-          </span>
-          {!section.content.trim() && (
-            <Badge variant="warning" className="text-[10px] px-1.5 py-0">
-              Kosong
-            </Badge>
-          )}
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(section.id);
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-1 h-6 bg-[var(--color-secondary)] rounded-full flex-shrink-0" />
+        <h2
+          contentEditable
+          suppressContentEditableWarning
+          className="font-heading text-[24px] font-semibold text-[var(--color-text-primary)] outline-none flex-1"
+          onBlur={(e) => {
+            // Keep section title in sync
           }}
-          className="p-1 rounded-md hover:bg-[var(--color-error-container)] text-[var(--color-text-secondary)] hover:text-[var(--color-error)] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
         >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </button>
+          {section.title}
+        </h2>
+      </div>
 
-      {/* Section Content */}
-      {section.expanded && (
-        <div className="px-4 pb-4 border-t border-[var(--color-border-subtle)]">
-          <Textarea
-            placeholder={`Tulis konten untuk ${section.title}...`}
-            value={section.content}
-            onChange={(e) =>
-              onUpdate(section.id, { content: e.target.value })
-            }
-            className="border-0 focus:ring-0 mt-3 min-h-[100px] resize-y bg-transparent p-0 text-sm leading-relaxed"
-          />
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--color-border-subtle)]">
-            <button className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-ai-accent-text)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-ai-accent-bg)] cursor-pointer">
-              <Sparkles className="w-3 h-3" /> AI Suggest
-            </button>
-            <button className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-container-low)] cursor-pointer">
-              <Code className="w-3 h-3" /> Markdown
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Section Body */}
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        className="text-sm text-[var(--color-text-secondary)] leading-relaxed outline-none min-h-[40px]"
+        onBlur={(e) => {
+          const text = e.currentTarget.innerText;
+          if (text.trim() !== section.content.trim()) {
+            onUpdate(section.id, text);
+          }
+        }}
+        dangerouslySetInnerHTML={{ __html: section.content.replace(/\n/g, "<br/>") }}
+      />
+
+      {/* Floating AI Action */}
+      <div className="absolute -right-4 -top-4 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-2 group-hover:translate-y-0" contentEditable="false">
+        <button
+          onClick={() => setRegenerating(true)}
+          className="bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-ai-accent)] text-white px-3 py-1.5 rounded-full text-[13px] font-medium flex items-center gap-1.5 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+        >
+          <Sparkles className="w-4 h-4" />
+          Regenerate with AI
+        </button>
+      </div>
+    </section>
   );
 }
 
-// ─── AI Assist Panel ──────────────────────────────────────
+// ─── AI Co-pilot Panel ────────────────────────────────────
 
-function AIAssistPanel({
+interface ChatMessage {
+  role: "assistant" | "user";
+  text: string;
+}
+
+function AICopilotPanel({
   onClose,
-  onApplySuggestion,
 }: {
   onClose: () => void;
-  onApplySuggestion: (text: string) => void;
 }) {
-  const [prompt, setPrompt] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      text: "I've generated the initial draft based on your outline. Select any paragraph in the editor to refine it, or ask me to expand on specific sections like \"User Acceptance Criteria\".",
+    },
+  ]);
+  const [input, setInput] = useState("");
 
-  async function handleGenerate() {
-    if (!prompt.trim()) return;
-    setLoading(true);
+  const suggestedActions = [
+    { icon: Plus, text: "Add technical requirements for the API integration" },
+    { icon: MessageSquare, text: "Make the Problem Statement more concise" },
+  ];
 
-    // Simulate AI generation - in production, call AI API
+  function handleSend() {
+    if (!input.trim()) return;
+    setMessages((prev) => [...prev, { role: "user", text: input }]);
+    setInput("");
+
+    // Simulate AI response
     setTimeout(() => {
-      setSuggestions([
-        `Berdasarkan permintaan "${prompt}", berikut adalah draft yang disarankan:\n\n**[Fitur]** Penjelasan detail tentang fitur yang diminta mencakup:\n- Poin utama 1 dengan deskripsi singkat\n- Poin utama 2 dengan detail teknis\n- Poin utama 3 dengan pertimbangan UX\n\n**[Justifikasi]** Fitur ini penting karena menjawab kebutuhan pengguna akan...`,
-        `Saran alternatif:\n\nFitur ini dapat diimplementasikan dengan pendekatan:\n1. Tahap 1: MVP dengan fungsionalitas dasar\n2. Tahap 2: Optimasi performa dan skalabilitas\n3. Tahap 3: Fitur lanjutan berdasarkan feedback user`,
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: "Based on your request, I've analyzed the current document. Here are my suggestions...\n\nYou might want to consider adding specific API endpoints, authentication methods, and error handling strategies in the technical requirements section.",
+        },
       ]);
-      setLoading(false);
     }, 1500);
   }
 
   return (
-    <div className="w-80 border-l border-[var(--color-border-subtle)] bg-[var(--color-surface-canvas)] flex flex-col h-full">
+    <aside className="w-[320px] border-l border-[var(--color-border-subtle)]/50 bg-[var(--color-surface-canvas)]/70 backdrop-blur-[12px] flex flex-col shrink-0 relative z-20 shadow-[-4px_0_15px_rgba(0,0,0,0.02)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-subtle)]">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[var(--color-border-subtle)]/50">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[var(--color-ai-accent)]" />
-          <span className="font-heading text-sm font-semibold text-[var(--color-text-primary)]">
-            AI Assist
-          </span>
+          <Sparkles className="w-5 h-5 text-[var(--color-ai-accent)]" />
+          <h3 className="font-heading text-[16px] font-semibold text-[var(--color-text-primary)]">
+            AI Co-pilot
+          </h3>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-md hover:bg-[var(--color-surface-container-high)] transition-colors cursor-pointer"
+          className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors p-1 rounded hover:bg-[var(--color-surface-container-low)] cursor-pointer"
         >
-          <X className="w-4 h-4 text-[var(--color-text-secondary)]" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-b border-[var(--color-border-subtle)]">
-        <Textarea
-          placeholder="Minta AI menulis konten untuk section tertentu..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          className="min-h-[80px] text-sm"
-        />
-        <Button
-          size="sm"
-          className="w-full mt-2 gap-1.5"
-          onClick={handleGenerate}
-          disabled={loading || !prompt.trim()}
-          loading={loading}
-        >
-          {loading ? "Menulis..." : "Generate"}
-        </Button>
-      </div>
-
-      {/* Suggestions */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {suggestions.length === 0 && !loading && (
-          <div className="text-center py-8">
-            <div className="w-12 h-12 rounded-full bg-[var(--color-ai-accent-bg)] flex items-center justify-center mx-auto mb-3">
-              <Sparkles className="w-5 h-5 text-[var(--color-ai-accent-text)]" />
-            </div>
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              Tulis prompt di atas untuk meminta AI menulis konten PRD.
-            </p>
-          </div>
-        )}
-
-        {suggestions.map((text, i) => (
+      {/* Chat Area */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[var(--color-surface-container-lowest)]/50">
+        {messages.map((msg, i) => (
           <div
             key={i}
-            className="p-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-container-low)]"
+            className={`flex flex-col gap-1 max-w-[90%] ${
+              msg.role === "user" ? "self-end items-end" : "items-start"
+            }`}
           >
-            <p className="text-xs text-[var(--color-text-primary)] whitespace-pre-wrap mb-3 leading-relaxed">
-              {text}
-            </p>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="w-full gap-1.5"
-              onClick={() => onApplySuggestion(text)}
-            >
-              <Check className="w-3 h-3" /> Apply ke Section
-            </Button>
+            {msg.role === "assistant" && (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded-full bg-[var(--color-ai-accent)]/10 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--color-ai-accent)]" />
+                </div>
+                <span className="label-caps text-[10px] text-[var(--color-text-secondary)]">
+                  PRD.ai Assistant
+                </span>
+              </div>
+            )}
+            <div
+              className={`p-3 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                msg.role === "assistant"
+                  ? "bg-[var(--color-surface-container-lowest)] border border-[var(--color-border-subtle)] rounded-tl-sm text-[var(--color-text-primary)]"
+                  : "bg-[var(--color-primary)] text-[var(--color-on-primary)] rounded-tr-sm"
+              }`}
+              dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, "<br/>") }}
+            />
           </div>
         ))}
 
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-5 h-5 animate-spin text-[var(--color-ai-accent)]" />
+        {/* Suggested Actions */}
+        {messages.length === 1 && (
+          <div className="grid grid-cols-1 gap-2 mt-2">
+            {suggestedActions.map((action, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setMessages((prev) => [...prev, { role: "user", text: action.text }]);
+                  setTimeout(() => {
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        role: "assistant",
+                        text: "I'll help you with that. Let me analyze the document and provide suggestions...",
+                      },
+                    ]);
+                  }, 1000);
+                }}
+                className="text-left p-2.5 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-container-lowest)] hover:border-[var(--color-secondary)] hover:bg-[var(--color-secondary-fixed)]/10 transition-colors group flex items-start gap-2 cursor-pointer"
+              >
+                <action.icon className="w-4 h-4 text-[var(--color-secondary)] mt-0.5 flex-shrink-0" />
+                <span className="text-[13px] text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">
+                  {action.text}
+                </span>
+              </button>
+            ))}
           </div>
         )}
       </div>
-    </div>
-  );
-}
 
-// ─── Export Modal ─────────────────────────────────────────
-
-function ExportModal({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  const exportOptions = [
-    { label: "PDF Document", icon: FileDown, desc: "Formatted PDF with all sections" },
-    { label: "DOCX Document", icon: FileDown, desc: "Editable Word document" },
-    { label: "Markdown", icon: Code, desc: "Raw markdown text file" },
-    { label: "Print", icon: Printer, desc: "Send to printer directly" },
-  ];
-
-  return (
-    <Modal open={open} onClose={onClose} title="Export PRD" size="md">
-      <div className="space-y-2">
-        {exportOptions.map((opt) => (
+      {/* Input Area */}
+      <div className="p-4 bg-[var(--color-surface-container-lowest)] border-t border-[var(--color-border-subtle)]/50">
+        <div className="relative flex items-end bg-[var(--color-surface-container-low)] border border-[var(--color-border-subtle)] rounded-lg focus-within:border-[var(--color-secondary)] focus-within:ring-1 focus-within:ring-[var(--color-secondary)] transition-all">
+          <textarea
+            className="w-full bg-transparent border-none focus:ring-0 resize-none py-3 pl-3 pr-10 text-sm text-[var(--color-text-primary)] min-h-[44px] max-h-[120px] outline-none"
+            placeholder="Ask AI to write or refine..."
+            rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+          />
           <button
-            key={opt.label}
-            className="w-full flex items-center gap-4 p-4 rounded-xl border border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-container-low)] transition-all cursor-pointer text-left"
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="absolute right-2 bottom-2 w-7 h-7 rounded bg-[var(--color-primary)] text-[var(--color-on-primary)] flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-container-low)] flex items-center justify-center flex-shrink-0">
-              <opt.icon className="w-5 h-5 text-[var(--color-text-primary)]" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-[var(--color-text-primary)]">
-                {opt.label}
-              </div>
-              <div className="text-xs text-[var(--color-text-secondary)]">
-                {opt.desc}
-              </div>
-            </div>
+            <Send className="w-4 h-4" />
           </button>
-        ))}
+        </div>
+        <div className="mt-2 text-center">
+          <span className="text-[11px] text-[var(--color-text-secondary)]">
+            AI may produce inaccurate information.
+          </span>
+        </div>
       </div>
-    </Modal>
+    </aside>
   );
 }
-
-// ─── Status Badge Color ───────────────────────────────────
-
-const statusColors: Record<string, "warning" | "success" | "secondary" | "default"> = {
-  draft: "warning",
-  review: "secondary",
-  final: "success",
-};
 
 // ─── Main Editor Page ─────────────────────────────────────
 
@@ -324,10 +278,9 @@ export default function EditorPage() {
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [aiPanelOpen, setAiPanelOpen] = useState(false);
-  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   // Load PRD data
   useEffect(() => {
@@ -338,7 +291,6 @@ export default function EditorPage() {
         if (data.prd) {
           setPRD(data.prd);
           setTitle(data.prd.title);
-          // Parse content or use defaults
           let parsedSections = DEFAULT_SECTIONS.map((s) => ({
             ...s,
             id: crypto.randomUUID(),
@@ -349,11 +301,13 @@ export default function EditorPage() {
               parsedSections = content.sections.map((s: any) => ({
                 ...s,
                 id: s.id || crypto.randomUUID(),
-                expanded: true,
               }));
             }
           } catch {}
           setSections(parsedSections);
+          if (parsedSections.length > 0) {
+            setActiveSection(parsedSections[0].id);
+          }
         }
       } catch (err) {
         console.error("Failed to load PRD:", err);
@@ -391,77 +345,10 @@ export default function EditorPage() {
     return () => clearInterval(interval);
   }, [autoSave]);
 
-  function updateSection(id: string, updates: Partial<PRDSection>) {
+  function updateSection(id: string, content: string) {
     setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+      prev.map((s) => (s.id === id ? { ...s, content } : s))
     );
-  }
-
-  function deleteSection(id: string) {
-    setSections((prev) => prev.filter((s) => s.id !== id));
-  }
-
-  function addSection() {
-    const newSection: PRDSection = {
-      id: crypto.randomUUID(),
-      title: `Section ${sections.length + 1}`,
-      content: "",
-      expanded: true,
-    };
-    setSections((prev) => [...prev, newSection]);
-  }
-
-  function applySuggestion(text: string) {
-    // Apply AI suggestion to the first section that's empty or to the current expanded section
-    const target = sections.find(
-      (s) => s.expanded
-    );
-    if (target) {
-      updateSection(target.id, {
-        content: target.content
-          ? target.content + "\n\n" + text
-          : text,
-      });
-    }
-  }
-
-  // ─── Drag & Drop ──────────────────────────────────────
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-
-  function handleDragStart(e: React.DragEvent, index: number) {
-    setDragIndex(index);
-    e.dataTransfer.effectAllowed = "move";
-  }
-
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }
-
-  function handleDrop(e: React.DragEvent, dropIndex: number) {
-    e.preventDefault();
-    if (dragIndex === null || dragIndex === dropIndex) return;
-    const newSections = [...sections];
-    const [moved] = newSections.splice(dragIndex, 1);
-    newSections.splice(dropIndex, 0, moved);
-    setSections(newSections);
-    setDragIndex(null);
-  }
-
-  async function handleStatusChange(newStatus: string) {
-    setStatusMenuOpen(false);
-    try {
-      const res = await fetch(`/api/prds/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        setPRD((prev) => (prev ? { ...prev, status: newStatus } : prev));
-      }
-    } catch (err) {
-      console.error("Failed to update status:", err);
-    }
   }
 
   if (loading) {
@@ -473,183 +360,129 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-background)] flex flex-col">
-      {/* ── Top Bar ── */}
-      <header className="bg-[var(--color-surface-canvas)] border-b border-[var(--color-border-subtle)] px-4 py-2 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="p-1.5 rounded-lg hover:bg-[var(--color-surface-container-high)] transition-colors"
+    <div className="min-h-screen bg-[var(--color-surface-background)] text-[var(--color-text-primary)] h-screen flex flex-col overflow-hidden">
+      {/* Document Header */}
+      <header className="flex items-center justify-between px-6 h-16 bg-[var(--color-surface-canvas)] border-b border-[var(--color-border-subtle)] shrink-0 z-20">
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-5 h-5 text-[var(--color-text-secondary)]" />
-          </Link>
-          <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center">
-            <FileText className="w-4 h-4 text-[var(--color-on-primary)]" />
-          </div>
-          <span className="font-heading text-base font-bold text-[var(--color-text-primary)] hidden sm:inline">
-            PRD Editor
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Status badge */}
-          <div className="relative">
-            <button
-              onClick={() => setStatusMenuOpen(!statusMenuOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-[var(--color-surface-container-high)] transition-colors cursor-pointer"
-            >
-              <Badge variant={statusColors[prd?.status || "draft"] || "default"}>
-                {(prd?.status || "draft").charAt(0).toUpperCase() + (prd?.status || "draft").slice(1)}
-              </Badge>
-              <ChevronDown className="w-3 h-3 text-[var(--color-text-secondary)]" />
-            </button>
-
-            {statusMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setStatusMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl shadow-lg py-1 overflow-hidden">
-                  {["draft", "review", "final"].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => handleStatusChange(s)}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-[var(--color-surface-container-low)] transition-colors flex items-center gap-2 cursor-pointer ${
-                        prd?.status === s
-                          ? "text-[var(--color-text-primary)] font-semibold"
-                          : "text-[var(--color-text-secondary)]"
-                      }`}
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          s === "draft"
-                            ? "bg-[var(--color-badge-draft-text)]"
-                            : s === "review"
-                              ? "bg-[var(--color-secondary)]"
-                              : "bg-[var(--color-success-green)]"
-                        }`}
-                      />
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="h-6 w-px bg-[var(--color-border-subtle)] mx-1" />
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setAiPanelOpen(!aiPanelOpen)}
-            className={`gap-1.5 ${aiPanelOpen ? "text-[var(--color-ai-accent)]" : ""}`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span className="hidden sm:inline">AI Assist</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setExportModalOpen(true)}
-            className="gap-1.5"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
-
-          <Button size="sm" onClick={autoSave} loading={saving} className="gap-1.5">
-            <Save className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {saving ? "Menyimpan..." : "Simpan"}
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-3">
+            <h1 className="font-heading text-[20px] font-bold tracking-tight text-[var(--color-text-primary)]">
+              {title || "Untitled PRD"}
+            </h1>
+            <span className="bg-[var(--color-surface-container-high)] text-[var(--color-on-surface-variant)] label-caps px-2 py-1 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success-green)]" />
+              {lastSaved ? "Auto-saved" : saving ? "Saving..." : "Unsaved"}
             </span>
-          </Button>
-
-          <div className="w-8 h-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center text-white text-xs font-bold ml-1">
-            U
           </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" className="gap-1">
+            <Plus className="w-4 h-4" /> Share
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={autoSave} loading={saving}>
+            <Download className="w-4 h-4" /> Export
+          </Button>
         </div>
       </header>
 
-      {/* ── Main Content ── */}
+      {/* Main Workspace */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="container-editor space-y-6">
-            {/* Save indicator */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {prd?.template && (
-                  <Badge variant="default">{prd.template.category}</Badge>
-                )}
-                <Badge
-                  variant={
-                    prd?.language === "id" ? "default" : "secondary"
-                  }
-                >
-                  {prd?.language === "id" ? "ID" : "EN"}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-                {lastSaved && (
-                  <>
-                    <Check className="w-3 h-3 text-[var(--color-success-green)]" />
-                    Tersimpan {lastSaved.toLocaleTimeString("id-ID")}
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Title */}
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Judul PRD..."
-              className="w-full text-3xl font-heading font-bold text-[var(--color-text-primary)] bg-transparent border-none outline-none placeholder:text-[var(--color-border-subtle)]"
-            />
-
-            {/* Sections */}
-            <div className="space-y-3">
-              {sections.map((section, idx) => (
-                <SectionEditor
-                  key={section.id}
-                  section={section}
-                  index={idx}
-                  onUpdate={updateSection}
-                  onDelete={deleteSection}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                />
-              ))}
-            </div>
-
-            {/* Add Section */}
-            <button
-              onClick={addSection}
-              className="w-full py-4 rounded-xl border-2 border-dashed border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-container-low)] transition-all flex items-center justify-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Tambah Section
-            </button>
+        {/* Left Panel: Table of Contents */}
+        <aside className="w-64 bg-[var(--color-surface-canvas)] border-r border-[var(--color-border-subtle)] flex flex-col shrink-0 overflow-y-auto">
+          <div className="p-4 pb-3 label-caps text-[var(--color-text-secondary)] sticky top-0 bg-[var(--color-surface-canvas)] z-10">
+            Document Outline
           </div>
-        </div>
+          <nav className="flex flex-col pb-6">
+            {sections.map((section) => (
+              <React.Fragment key={section.id}>
+                <a
+                  href={`#section-${section.id}`}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`px-4 py-2.5 text-sm transition-colors border-l-[3px] ${
+                    activeSection === section.id
+                      ? "text-[var(--color-text-primary)] font-medium border-[var(--color-secondary)] bg-[var(--color-secondary-fixed)]/30"
+                      : "text-[var(--color-text-secondary)] border-transparent hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-text-primary)]"
+                  }`}
+                >
+                  {section.title}
+                </a>
+                {/* Sub-items for User Stories */}
+                {section.title === "User Stories" && (
+                  <div className="pl-8 pr-4 py-1 flex flex-col gap-1">
+                    <a className="text-[13px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors truncate cursor-pointer">
+                      US-1: One-click Checkout
+                    </a>
+                    <a className="text-[13px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors truncate cursor-pointer">
+                      US-2: Multi-currency Support
+                    </a>
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </nav>
+        </aside>
 
-        {/* AI Assist Panel */}
-        {aiPanelOpen && (
-          <AIAssistPanel
-            onClose={() => setAiPanelOpen(false)}
-            onApplySuggestion={applySuggestion}
-          />
-        )}
+        {/* Center Panel: WYSIWYG Editor */}
+        <main className="flex-1 flex flex-col relative bg-[var(--color-surface-container-low)] overflow-hidden">
+          {/* Sticky Formatting Toolbar */}
+          <div className="h-12 bg-[var(--color-surface-canvas)] border-b border-[var(--color-border-subtle)] flex items-center justify-center px-6 shrink-0 z-10 shadow-sm">
+            <div className="flex items-center gap-1 bg-[var(--color-surface-container-low)] p-1 rounded border border-[var(--color-border-subtle)]">
+              <button className="p-1.5 text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <Bold className="w-[18px] h-[18px]" />
+              </button>
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <Italic className="w-[18px] h-[18px]" />
+              </button>
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <Underline className="w-[18px] h-[18px]" />
+              </button>
+              <div className="w-px h-4 bg-[var(--color-outline-variant)] mx-1" />
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors flex items-center gap-1 cursor-pointer">
+                <span className="text-[13px] font-medium pl-1">Normal text</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <div className="w-px h-4 bg-[var(--color-outline-variant)] mx-1" />
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <List className="w-[18px] h-[18px]" />
+              </button>
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <ListOrdered className="w-[18px] h-[18px]" />
+              </button>
+              <div className="w-px h-4 bg-[var(--color-outline-variant)] mx-1" />
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <Link className="w-[18px] h-[18px]" />
+              </button>
+              <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-container-highest)] rounded transition-colors cursor-pointer">
+                <Image className="w-[18px] h-[18px]" />
+              </button>
+            </div>
+          </div>
+
+          {/* Document Canvas */}
+          <div className="flex-1 overflow-y-auto w-full py-6 px-4">
+            <div className="max-w-[var(--editor-max)] mx-auto bg-[var(--color-surface-container-lowest)] min-h-[800px] border border-[var(--color-border-subtle)] rounded shadow-sm p-[64px] relative">
+              {/* Document Content */}
+              <div className="text-[var(--color-text-primary)]">
+                {sections.map((section) => (
+                  <SectionContent
+                    key={section.id}
+                    section={section}
+                    onUpdate={updateSection}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Right Panel: AI Co-pilot */}
+        {aiPanelOpen && <AICopilotPanel onClose={() => setAiPanelOpen(false)} />}
       </div>
-
-      {/* Export Modal */}
-      <ExportModal
-        open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-      />
     </div>
   );
 }

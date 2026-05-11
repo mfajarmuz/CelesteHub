@@ -3,23 +3,18 @@
 import React, { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Link from "next/link";
 import {
   Search,
   Grid3X3,
   List,
   MoreHorizontal,
   Clock,
-  Plus,
   Sparkles,
-  LayoutTemplate,
+  Library,
 } from "lucide-react";
 
-// Mock data for PRDs
+// ─── Mock Data ──────────────────────────────────────────
+
 const mockPRDs = [
   {
     id: "1",
@@ -29,6 +24,9 @@ const mockPRDs = [
     category: "SaaS",
     status: "Draft",
     updatedAt: "2 hrs ago",
+    statusColor: "bg-tertiary-fixed-dim",
+    statusTextColor: "text-[#92400E]",
+    statusBgColor: "bg-amber-100",
   },
   {
     id: "2",
@@ -38,6 +36,9 @@ const mockPRDs = [
     category: "Fintech",
     status: "Final",
     updatedAt: "Yesterday",
+    statusColor: "bg-success-green",
+    statusTextColor: "text-success-green",
+    statusBgColor: "bg-green-100",
   },
   {
     id: "3",
@@ -46,44 +47,84 @@ const mockPRDs = [
       "Logic and delivery rules for segmented push notifications across iOS and Android platforms.",
     category: "Mobile App",
     status: "Final",
-    updatedAt: "Oct 12, 2025",
-  },
-  {
-    id: "4",
-    title: "AI-Powered Chatbot untuk Customer Service",
-    description:
-      "Integrasi LLM untuk menangani pertanyaan pelanggan secara otomatis dengan human handoff.",
-    category: "SaaS",
-    status: "Draft",
-    updatedAt: "3 days ago",
-  },
-  {
-    id: "5",
-    title: "E-Commerce Checkout Optimization",
-    description:
-      "Mengurangi friction di checkout flow dengan one-click purchase dan saved payment methods.",
-    category: "E-commerce",
-    status: "Review",
-    updatedAt: "1 week ago",
-  },
-  {
-    id: "6",
-    title: "Referral Program Dashboard",
-    description:
-      "Dashboard untuk user melihat status referral mereka, reward yang didapat, dan leaderboard.",
-    category: "Mobile App",
-    status: "Draft",
-    updatedAt: "2 weeks ago",
+    updatedAt: "Oct 12, 2023",
+    statusColor: "bg-success-green",
+    statusTextColor: "text-success-green",
+    statusBgColor: "bg-green-100",
   },
 ];
 
-const categories = ["All", "Fintech", "SaaS", "Mobile App", "E-commerce"] as const;
+const categories = ["All", "Fintech", "SaaS", "Mobile App"];
 
-const statusColors: Record<string, "warning" | "success" | "secondary" | "default"> = {
-  Draft: "warning",
-  Final: "success",
-  Review: "secondary",
-};
+// ─── Icons (Material Symbols style) ──────────────────────
+
+function IconLibraryBooks({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  );
+}
+
+function IconSchedule({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function IconMagic({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
+}
+
+function IconMoreVert({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+    >
+      <circle cx="12" cy="5" r="1.5" />
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="12" cy="19" r="1.5" />
+    </svg>
+  );
+}
+
+// ─── Dashboard Page ─────────────────────────────────────
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,62 +141,64 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-background)]">
+    <div className="h-screen flex overflow-hidden bg-[var(--color-surface-background)] text-[var(--color-text-primary)] font-body antialiased">
+      {/* SideNavBar (shared component) */}
       <Sidebar />
 
-      <div className="md:ml-64 flex flex-col min-h-screen">
+      {/* Main Content Wrapper */}
+      <div className="ml-64 flex-1 flex flex-col h-screen overflow-hidden">
+        {/* TopNavBar */}
         <DashboardHeader />
 
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Main Scrollable Canvas */}
+        <main className="flex-1 overflow-y-auto p-6 bg-[var(--color-surface-background)]">
           <div className="max-w-[var(--container-max)] mx-auto space-y-6">
-            {/* Welcome & Stats */}
+            {/* Welcome & Stats (Bento Grid Style) */}
             <div className="grid grid-cols-12 gap-6">
+              {/* Welcome */}
               <div className="col-span-12 md:col-span-8 bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl p-6 flex flex-col justify-between">
                 <div>
-                  <h1 className="heading-headline-md text-[var(--color-text-primary)]">
+                  <h1 className="heading-headline-lg text-[var(--color-text-primary)]">
                     Good morning, Team.
                   </h1>
-                  <p className="body-md text-[var(--color-text-secondary)] mt-1">
+                  <p className="text-[var(--color-text-secondary)] text-base leading-relaxed mt-1">
                     You have 3 drafts pending review. Ready to build something
                     great?
                   </p>
                 </div>
-                <div className="mt-6 flex items-center gap-3">
-                  <Link href="/dashboard/new">
-                    <Button size="lg" className="gap-2">
-                      <Sparkles className="w-4 h-4" /> Generate PRD
-                    </Button>
-                  </Link>
-                  <Link href="/templates">
-                    <Button variant="ghost" size="lg">
-                      <LayoutTemplate className="w-4 h-4" /> Browse Templates
-                    </Button>
-                  </Link>
+                <div className="mt-6 flex items-center gap-4">
+                  <button className="bg-[var(--color-primary)] text-[var(--color-on-primary)] px-6 py-3 rounded-lg text-xs font-medium uppercase tracking-wider flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer font-mono">
+                    <Sparkles className="w-4 h-4" /> Generate PRD
+                  </button>
+                  <button className="px-6 py-3 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-xs font-medium uppercase tracking-wider hover:bg-[var(--color-surface-container-low)] transition-colors cursor-pointer font-mono">
+                    Browse Templates
+                  </button>
                 </div>
               </div>
 
+              {/* Stats */}
               <div className="col-span-12 md:col-span-4 flex flex-col gap-4">
                 <div className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl p-4 flex items-center justify-between flex-1">
                   <div>
-                    <div className="label-caps text-[var(--color-text-secondary)] mb-1">
+                    <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
                       Total PRDs
                     </div>
-                    <div className="text-3xl font-bold font-heading text-[var(--color-text-primary)]">
+                    <div className="text-[36px] leading-none font-extrabold text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
                       124
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-[var(--color-surface-container-low)] flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-[var(--color-text-primary)]" />
+                  <div className="w-12 h-12 rounded-full bg-[var(--color-surface-container-low)] flex items-center justify-center text-[var(--color-text-primary)]">
+                    <IconLibraryBooks />
                   </div>
                 </div>
                 <div className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl p-4 flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-end mb-2">
-                    <div className="label-caps text-[var(--color-text-secondary)]">
+                    <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)]">
                       Credits Left
                     </div>
-                    <div className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
+                    <div className="text-lg leading-tight text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-heading)', fontWeight: 600 }}>
                       8,450{" "}
-                      <span className="body-sm text-[var(--color-text-secondary)] font-normal">
+                      <span className="text-sm font-normal text-[var(--color-text-secondary)]">
                         / 10k
                       </span>
                     </div>
@@ -170,90 +213,156 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Search & Filters */}
+            {/* Filters & Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {/* Search */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-secondary)]" />
-                <Input
-                  placeholder="Cari PRD..."
+                <input
+                  placeholder="Search PRDs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--color-border-subtle)] focus:border-[var(--color-secondary)] focus:ring-1 focus:ring-[var(--color-secondary)] outline-none text-sm text-[var(--color-text-primary)] bg-[var(--color-surface-canvas)] transition-colors"
                 />
               </div>
+            </div>
+
+            {/* Category Pills + View Toggle */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-mono uppercase tracking-wider transition-colors cursor-pointer ${
+                      activeCategory === cat
+                        ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] border border-[var(--color-primary)]"
+                        : "bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)]"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              {/* View toggle */}
               <div className="flex items-center gap-2 border border-[var(--color-border-subtle)] rounded-lg p-1 bg-[var(--color-surface-canvas)]">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-1.5 rounded ${
+                  className={`p-1 rounded cursor-pointer transition-colors ${
                     viewMode === "grid"
                       ? "bg-[var(--color-surface-container-low)] text-[var(--color-text-primary)]"
                       : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-                  } cursor-pointer transition-colors`}
+                  }`}
                 >
-                  <Grid3X3 className="w-4 h-4" />
+                  <Grid3X3 className="w-5 h-5 block" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-1.5 rounded ${
+                  className={`p-1 rounded cursor-pointer transition-colors ${
                     viewMode === "list"
                       ? "bg-[var(--color-surface-container-low)] text-[var(--color-text-primary)]"
                       : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-                  } cursor-pointer transition-colors`}
+                  }`}
                 >
-                  <List className="w-4 h-4" />
+                  <List className="w-5 h-5 block" />
                 </button>
               </div>
             </div>
 
-            {/* Category Filter */}
-            <div className="flex flex-wrap items-center gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                    activeCategory === cat
-                      ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
-                      : "bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)]"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {/* PRD Grid */}
+            {/* Document Grid */}
             {filteredPRDs.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-surface-container-low)] flex items-center justify-center mx-auto mb-4">
                   <Search className="w-6 h-6 text-[var(--color-text-secondary)]" />
                 </div>
                 <h3 className="font-heading text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-                  Tidak ada PRD ditemukan
+                  No PRDs found
                 </h3>
-                <p className="body-sm text-[var(--color-text-secondary)] mb-6">
-                  Coba ubah kata kunci pencarian atau filter kategori.
+                <p className="text-sm text-[var(--color-text-secondary)] mb-6">
+                  Try changing your search query or category filter.
                 </p>
-                <Button
-                  variant="secondary"
+                <button
                   onClick={() => {
                     setSearchQuery("");
                     setActiveCategory("All");
                   }}
+                  className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   Reset Filter
-                </Button>
+                </button>
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredPRDs.map((prd) => (
-                  <PRDGridCard key={prd.id} prd={prd} />
+                  <div
+                    key={prd.id}
+                    className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl p-4 flex flex-col hover:shadow-sm hover:border-[var(--color-outline-variant)] transition-all group"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="bg-[var(--color-surface-container-highest)] px-2 py-1 rounded text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        {prd.category}
+                      </div>
+                      <button className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <IconMoreVert className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <h3 className="font-heading text-base font-semibold text-[var(--color-text-primary)] mb-2 line-clamp-2">
+                      {prd.title}
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 flex-1 mb-4">
+                      {prd.description}
+                    </p>
+                    <div className="flex justify-between items-center pt-3 border-t border-[var(--color-border-subtle)] mt-auto">
+                      <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)] text-xs">
+                        <IconSchedule className="w-4 h-4" />
+                        <span>{prd.updatedAt}</span>
+                      </div>
+                      <span className="flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        <span
+                          className={`w-2 h-2 rounded-full ${prd.statusColor}`}
+                        ></span>{" "}
+                        {prd.status}
+                      </span>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
               <div className="space-y-2">
                 {filteredPRDs.map((prd) => (
-                  <PRDListCard key={prd.id} prd={prd} />
+                  <div
+                    key={prd.id}
+                    className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-lg p-4 flex items-center gap-4 hover:shadow-sm hover:border-[var(--color-outline-variant)] transition-all group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-container-low)] flex items-center justify-center flex-shrink-0 text-[var(--color-text-secondary)]">
+                      <Library className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-heading text-sm font-semibold text-[var(--color-text-primary)] truncate">
+                        {prd.title}
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-secondary)] truncate">
+                        {prd.description}
+                      </p>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-3">
+                      <div className="bg-[var(--color-surface-container-highest)] px-2 py-1 rounded text-[10px] font-mono uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        {prd.category}
+                      </div>
+                      <span className="flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        <span
+                          className={`w-2 h-2 rounded-full ${prd.statusColor}`}
+                        ></span>{" "}
+                        {prd.status}
+                      </span>
+                      <span className="text-xs text-[var(--color-text-secondary)]">
+                        {prd.updatedAt}
+                      </span>
+                    </div>
+                    <button className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <IconMoreVert className="w-5 h-5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -261,93 +370,5 @@ export default function DashboardPage() {
         </main>
       </div>
     </div>
-  );
-}
-
-function PRDGridCard({
-  prd,
-}: {
-  prd: (typeof mockPRDs)[number];
-}) {
-  return (
-    <Card hover className="flex flex-col">
-      <div className="flex justify-between items-start mb-3">
-        <Badge variant="default">{prd.category}</Badge>
-        <button className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
-      </div>
-      <h3 className="font-heading text-base font-semibold text-[var(--color-text-primary)] mb-2 line-clamp-2">
-        {prd.title}
-      </h3>
-      <p className="body-sm text-[var(--color-text-secondary)] line-clamp-2 flex-1 mb-4">
-        {prd.description}
-      </p>
-      <div className="flex justify-between items-center pt-3 border-t border-[var(--color-border-subtle)] mt-auto">
-        <div className="flex items-center gap-1.5 body-sm text-[var(--color-text-secondary)]">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="text-xs">{prd.updatedAt}</span>
-        </div>
-        <Badge variant={statusColors[prd.status] || "default"}>
-          {prd.status}
-        </Badge>
-      </div>
-    </Card>
-  );
-}
-
-function PRDListCard({
-  prd,
-}: {
-  prd: (typeof mockPRDs)[number];
-}) {
-  return (
-    <div className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-lg p-4 flex items-center gap-4 hover:shadow-sm hover:border-[var(--color-outline-variant)] transition-all group cursor-pointer">
-      <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-container-low)] flex items-center justify-center flex-shrink-0">
-        <FileTextIcon />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="font-heading text-sm font-semibold text-[var(--color-text-primary)] truncate">
-          {prd.title}
-        </h3>
-        <p className="body-sm text-[var(--color-text-secondary)] truncate">
-          {prd.description}
-        </p>
-      </div>
-      <div className="hidden sm:flex items-center gap-3">
-        <Badge variant="default">{prd.category}</Badge>
-        <Badge variant={statusColors[prd.status] || "default"}>
-          {prd.status}
-        </Badge>
-        <span className="body-sm text-[var(--color-text-secondary)] text-xs">
-          {prd.updatedAt}
-        </span>
-      </div>
-      <button className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-        <MoreHorizontal className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
-
-function FileTextIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[var(--color-text-secondary)]"
-    >
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <line x1="10" y1="9" x2="8" y2="9" />
-    </svg>
   );
 }

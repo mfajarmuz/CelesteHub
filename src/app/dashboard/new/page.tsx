@@ -1,558 +1,465 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import {
-  FileText,
   ArrowLeft,
   ArrowRight,
-  Check,
   Sparkles,
-  LayoutTemplate,
-  ChevronRight,
-  Loader2,
+  Lightbulb,
+  UserSearch,
+  X,
+  FileText,
 } from "lucide-react";
-import Link from "next/link";
 
-// ─── Types ────────────────────────────────────────────────
-
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  isPublic: boolean;
-}
+// ─── Types ──────────────────────────────────────────────
 
 interface FormData {
-  title: string;
-  description: string;
-  language: string;
-  templateId: string;
+  productName: string;
+  problemDescription: string;
+  targetUsers: string;
+  coreFeatures: string;
 }
 
-type Step = "info" | "template" | "review";
+// ─── Icons (Material Symbols replacements) ──────────────
 
-// ─── Step 1: Info ─────────────────────────────────────────
+function IconMagicButton({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
+}
 
-function StepInfo({
-  form,
+function IconAutoAwesome({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+    >
+      <path d="M19 9l1.5-3L23 4.5 20.5 3 19 0 17.5 3 15 4.5 17.5 6 19 9zm-6.5 2.5L14 8l1.5 2.5L18 12l-2.5 1.5L14 16l-1.5-2.5L10 12l2.5-1.5zM4.5 8L6 5.5 8.5 4 6 2.5 4.5 0 3 2.5 0.5 4 3 5.5 4.5 8zM19 13l-1.5 2.5L15 17l2.5 1.5L19 21l1.5-2.5L23 17l-2.5-1.5L19 13zm-9 3l-1 2-2 1 2 1 1 2 1-2 2-1-2-1-1-2z" />
+    </svg>
+  );
+}
+
+function IconClose({ className = "w-5 h-5" }: { className?: string }) {
+  return <X className={className} />;
+}
+
+// ─── Form Input Component ──────────────────────────────
+
+function FormInput({
+  label,
+  placeholder,
+  value,
   onChange,
+  type = "text",
+  rows,
 }: {
-  form: FormData;
-  onChange: (updates: Partial<FormData>) => void;
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  rows?: number;
 }) {
+  const Component = rows ? "textarea" : "input";
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <div>
-        <h2 className="font-heading text-xl font-semibold text-[var(--color-text-primary)] mb-1">
-          Informasi Dokumen
-        </h2>
-        <p className="body-sm text-[var(--color-text-secondary)]">
-          Beri judul dan deskripsi untuk PRD yang akan dibuat.
-        </p>
-      </div>
-
-      <Input
-        label="Judul PRD"
-        placeholder="Contoh: User Authentication Revamp v2.0"
-        value={form.title}
-        onChange={(e) => onChange({ title: e.target.value })}
-        required
-      />
-
-      <Textarea
-        label="Deskripsi Produk"
-        placeholder="Jelaskan secara singkat produk atau fitur yang akan dibuat. Semakin detail deskripsi, semakin baik hasil PRD-nya."
-        value={form.description}
-        onChange={(e) => onChange({ description: e.target.value })}
-      />
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[var(--color-text-primary)]">
-          Bahasa
-        </label>
-        <select
-          value={form.language}
-          onChange={(e) => onChange({ language: e.target.value })}
-          className="w-full px-3 py-2.5 bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-[var(--radius-md)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-transparent transition-colors duration-150"
-        >
-          <option value="id">Bahasa Indonesia</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-
-      {/* Tips */}
-      <div className="bg-[var(--color-surface-container-low)] rounded-xl p-4 border border-[var(--color-border-subtle)]">
-        <div className="flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-[var(--color-ai-accent)] flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
-              Tips menulis deskripsi yang baik
-            </div>
-            <ul className="text-xs text-[var(--color-text-secondary)] space-y-1">
-              <li>• Sebutkan masalah yang ingin dipecahkan</li>
-              <li>• Jelaskan target pengguna</li>
-              <li>• Cantumkan fitur utama yang diinginkan</li>
-              <li>• Semakin detail, semakin akurat hasil PRD</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Step 2: Template ─────────────────────────────────────
-
-function StepTemplate({
-  selectedId,
-  onSelect,
-}: {
-  selectedId: string;
-  onSelect: (id: string) => void;
-}) {
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchTemplates() {
-      try {
-        const res = await fetch("/api/templates");
-        const data = await res.json();
-        setTemplates(data.templates || []);
-      } catch (err) {
-        console.error("Failed to fetch templates:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTemplates();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-secondary)]" />
-      </div>
-    );
-  }
-
-  const categories = [
-    ...new Set(templates.map((t) => t.category)),
-  ] as string[];
-
-  return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <div>
-        <h2 className="font-heading text-xl font-semibold text-[var(--color-text-primary)] mb-1">
-          Pilih Template
-        </h2>
-        <p className="body-sm text-[var(--color-text-secondary)]">
-          Pilih template yang sesuai dengan jenis produk Anda. Atau gunakan
-          template kosong untuk memulai dari awal.
-        </p>
-      </div>
-
-      {/* Empty template card */}
-      <button
-        onClick={() => onSelect("")}
-        className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
-          selectedId === ""
-            ? "border-[var(--color-ai-accent)] bg-[var(--color-ai-accent)]/5"
-            : "border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)] bg-[var(--color-surface-canvas)]"
-        }`}
-      >
-        <div className="flex items-center gap-4">
-          <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-              selectedId === ""
-                ? "bg-[var(--color-ai-accent)] text-white"
-                : "bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)]"
-            }`}
-          >
-            <FileText className="w-6 h-6" />
-          </div>
-          <div className="flex-1">
-            <div className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
-              Template Kosong
-            </div>
-            <div className="body-sm text-[var(--color-text-secondary)]">
-              Mulai dari awal tanpa struktur template
-            </div>
-          </div>
-          {selectedId === "" && (
-            <Check className="w-5 h-5 text-[var(--color-ai-accent)]" />
-          )}
-        </div>
-      </button>
-
-      {/* Category sections */}
-      {categories.map((cat) => (
-        <div key={cat}>
-          <div className="label-caps text-[var(--color-text-secondary)] mb-3">
-            {cat}
-          </div>
-          <div className="space-y-2">
-            {templates
-              .filter((t) => t.category === cat)
-              .map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => onSelect(template.id)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                    selectedId === template.id
-                      ? "border-[var(--color-ai-accent)] bg-[var(--color-ai-accent)]/5"
-                      : "border-[var(--color-border-subtle)] hover:border-[var(--color-outline-variant)] bg-[var(--color-surface-canvas)]"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        selectedId === template.id
-                          ? "bg-[var(--color-ai-accent)] text-white"
-                          : "bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)]"
-                      }`}
-                    >
-                      <LayoutTemplate className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
-                        {template.name}
-                      </div>
-                      <div className="body-sm text-[var(--color-text-secondary)]">
-                        {template.description}
-                      </div>
-                    </div>
-                    {selectedId === template.id && (
-                      <Check className="w-5 h-5 text-[var(--color-ai-accent)]" />
-                    )}
-                  </div>
-                </button>
-              ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Step 3: Review & Generate ────────────────────────────
-
-function StepReview({
-  form,
-  onGenerate,
-  generating,
-  error,
-}: {
-  form: FormData;
-  onGenerate: () => void;
-  generating: boolean;
-  error: string | null;
-}) {
-  return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <div>
-        <h2 className="font-heading text-xl font-semibold text-[var(--color-text-primary)] mb-1">
-          Review & Generate
-        </h2>
-        <p className="body-sm text-[var(--color-text-secondary)]">
-          Periksa kembali informasi di bawah, lalu klik Generate untuk memulai.
-        </p>
-      </div>
-
-      <Card>
-        <div className="space-y-4">
-          <div>
-            <div className="label-caps text-[var(--color-text-secondary)] mb-1">
-              Judul
-            </div>
-            <div className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
-              {form.title || "(belum diisi)"}
-            </div>
-          </div>
-
-          {form.description && (
-            <div>
-              <div className="label-caps text-[var(--color-text-secondary)] mb-1">
-                Deskripsi
-              </div>
-              <div className="body-sm text-[var(--color-text-primary)] leading-relaxed">
-                {form.description}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <div className="label-caps text-[var(--color-text-secondary)] mb-1">
-              Bahasa
-            </div>
-            <Badge variant="default">
-              {form.language === "id" ? "Bahasa Indonesia" : "English"}
-            </Badge>
-          </div>
-
-          <div>
-            <div className="label-caps text-[var(--color-text-secondary)] mb-1">
-              Template
-            </div>
-            <Badge variant="secondary">
-              {form.templateId ? "Template terpilih" : "Template kosong"}
-            </Badge>
-          </div>
-        </div>
-      </Card>
-
-      {error && (
-        <div className="p-4 rounded-xl bg-[var(--color-error-container)] text-sm text-[var(--color-on-error-container)]">
-          {error}
-        </div>
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-[var(--color-text-primary)]">
+        {label}
+      </label>
+      {rows ? (
+        <textarea
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={rows}
+          className="w-full px-4 py-3 rounded-lg border border-[var(--color-border-subtle)] focus:border-[var(--color-secondary)] focus:ring-1 focus:ring-[var(--color-secondary)] outline-none text-sm text-[var(--color-text-primary)] transition-colors bg-[var(--color-surface-canvas)] resize-y"
+        />
+      ) : (
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg border border-[var(--color-border-subtle)] focus:border-[var(--color-secondary)] focus:ring-1 focus:ring-[var(--color-secondary)] outline-none text-sm text-[var(--color-text-primary)] transition-colors bg-[var(--color-surface-canvas)]"
+        />
       )}
-
-      {/* DESIGN.md §5.4 — AI callout: bg #F5F3FF, text #6D28D9, left bar #8B5CF6 */}
-      <div className="bg-[var(--color-ai-accent-bg)] rounded-xl overflow-hidden border border-[var(--color-ai-accent)]/20">
-        <div className="flex">
-          <div className="w-1 bg-[var(--color-ai-accent)] flex-shrink-0" />
-          <div className="flex items-center gap-4 p-6">
-            <div className="w-12 h-12 rounded-full bg-[var(--color-ai-accent)]/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-[var(--color-ai-accent)]" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-[var(--color-ai-accent-text)] mb-1">
-                Siap di-Generate
-              </div>
-              <div className="text-xs text-[var(--color-ai-accent-text)]/70">
-                AI akan membuat PRD berdasarkan informasi di atas. Proses ini
-                memakan waktu sekitar 10-20 detik. Anda bisa mengedit hasilnya
-                nanti.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Button
-        size="lg"
-        className="w-full gap-2"
-        onClick={onGenerate}
-        disabled={generating || !form.title.trim()}
-        loading={generating}
-      >
-        {generating ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Menghasilkan PRD...
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-5 h-5" />
-            Generate PRD
-          </>
-        )}
-      </Button>
     </div>
   );
 }
 
-// ─── Main Wizard Page ─────────────────────────────────────
+// ─── Steps ──────────────────────────────────────────────
+
+const STEPS = ["Vision", "Details", "Goals", "Finalize"] as const;
+type Step = (typeof STEPS)[number];
+const STEP_INDEX: Record<Step, number> = {
+  Vision: 0,
+  Details: 1,
+  Goals: 2,
+  Finalize: 3,
+};
+
+// ─── Main Wizard Page ──────────────────────────────────
 
 export default function NewPRDWizardPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>("info");
+  const [currentStep, setCurrentStep] = useState<Step>("Vision");
   const [form, setForm] = useState<FormData>({
-    title: "",
-    description: "",
-    language: "id",
-    templateId: "",
+    productName: "",
+    problemDescription: "",
+    targetUsers: "",
+    coreFeatures: "",
   });
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const stepOrder: Step[] = ["info", "template", "review"];
-  const currentIndex = stepOrder.indexOf(currentStep);
-  const progress = ((currentIndex + 1) / stepOrder.length) * 100;
+  const currentIdx = STEP_INDEX[currentStep];
+  const progressPercent =
+    STEPS.length > 1 ? (currentIdx / (STEPS.length - 1)) * 100 : 0;
 
-  function updateForm(updates: Partial<FormData>) {
-    setForm((prev) => ({ ...prev, ...updates }));
+  function updateForm(key: keyof FormData, value: string) {
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function goNext() {
-    if (currentStep === "info" && !form.title.trim()) return;
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < stepOrder.length) {
-      setCurrentStep(stepOrder[nextIndex]);
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < STEPS.length) {
+      setCurrentStep(STEPS[nextIdx]);
     }
   }
 
   function goBack() {
-    const prevIndex = currentIndex - 1;
-    if (prevIndex >= 0) {
-      setCurrentStep(stepOrder[prevIndex]);
+    const prevIdx = currentIdx - 1;
+    if (prevIdx >= 0) {
+      setCurrentStep(STEPS[prevIdx]);
     }
   }
 
-  async function handleGenerate() {
-    setGenerating(true);
-    setError(null);
+  // ─── Step Content ─────────────────────────────────────
 
-    try {
-      const res = await fetch("/api/prds", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: form.title,
-          templateId: form.templateId || undefined,
-          language: form.language,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal membuat PRD");
-      }
-
-      router.push(`/dashboard/${data.prd.id}/edit`);
-      router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan. Silakan coba lagi.");
-    } finally {
-      setGenerating(false);
+  function renderStepContent() {
+    switch (currentStep) {
+      case "Vision":
+        return (
+          <div>
+            <h1 className="heading-headline-lg text-[var(--color-text-primary)] mb-3">
+              Product Vision
+            </h1>
+            <p className="text-base text-[var(--color-text-secondary)] mb-6">
+              Definisikan masalah inti yang ingin Anda selesaikan dan untuk
+              siapa solusi ini dibangun.
+            </p>
+            <form className="flex flex-col gap-4 bg-[var(--color-surface-canvas)] p-6 rounded-xl border border-[var(--color-border-subtle)] shadow-sm">
+              <FormInput
+                label="Nama Produk"
+                placeholder="Misal: FinTrack Pro"
+                value={form.productName}
+                onChange={(v) => updateForm("productName", v)}
+              />
+              <FormInput
+                label="Deskripsi Masalah"
+                placeholder="Jelaskan masalah utama yang dihadapi pengguna saat ini..."
+                value={form.problemDescription}
+                onChange={(v) => updateForm("problemDescription", v)}
+                rows={4}
+              />
+              <FormInput
+                label="Target Pengguna"
+                placeholder="Misal: Manajer Keuangan UMKM"
+                value={form.targetUsers}
+                onChange={(v) => updateForm("targetUsers", v)}
+              />
+              <FormInput
+                label="Fitur Utama (Pisahkan dengan koma)"
+                placeholder="Misal: Dashboard analitik real-time, Ekspor PDF, Integrasi Bank"
+                value={form.coreFeatures}
+                onChange={(v) => updateForm("coreFeatures", v)}
+                rows={3}
+              />
+            </form>
+          </div>
+        );
+      case "Details":
+        return (
+          <div>
+            <h1 className="heading-headline-lg text-[var(--color-text-primary)] mb-3">
+              Detail Produk
+            </h1>
+            <p className="text-base text-[var(--color-text-secondary)] mb-6">
+              Tambahkan detail teknis dan informasi tambahan tentang produk
+              Anda.
+            </p>
+            <form className="flex flex-col gap-4 bg-[var(--color-surface-canvas)] p-6 rounded-xl border border-[var(--color-border-subtle)] shadow-sm">
+              <FormInput
+                label="Tech Stack (Opsional)"
+                placeholder="Misal: React Native, Node.js, PostgreSQL"
+                value={form.coreFeatures}
+                onChange={(v) => updateForm("coreFeatures", v)}
+              />
+              <FormInput
+                label="Platform"
+                placeholder="Misal: Web, Mobile iOS & Android"
+                value={form.targetUsers}
+                onChange={(v) => updateForm("targetUsers", v)}
+              />
+              <FormInput
+                label="Integrasi Pihak Ketiga"
+                placeholder="Misal: Payment gateway, CRM, Email service"
+                value={form.problemDescription}
+                onChange={(v) => updateForm("problemDescription", v)}
+                rows={3}
+              />
+            </form>
+          </div>
+        );
+      case "Goals":
+        return (
+          <div>
+            <h1 className="heading-headline-lg text-[var(--color-text-primary)] mb-3">
+              Goals & Metrics
+            </h1>
+            <p className="text-base text-[var(--color-text-secondary)] mb-6">
+              Tentukan tujuan produk dan bagaimana Anda akan mengukur
+              keberhasilannya.
+            </p>
+            <form className="flex flex-col gap-4 bg-[var(--color-surface-canvas)] p-6 rounded-xl border border-[var(--color-border-subtle)] shadow-sm">
+              <FormInput
+                label="Tujuan Bisnis"
+                placeholder="Misal: Meningkatkan konversi sebesar 20%"
+                value={form.productName}
+                onChange={(v) => updateForm("productName", v)}
+              />
+              <FormInput
+                label="Success Metrics"
+                placeholder="Misal: DAU, Conversion Rate, NPS"
+                value={form.coreFeatures}
+                onChange={(v) => updateForm("coreFeatures", v)}
+                rows={3}
+              />
+            </form>
+          </div>
+        );
+      case "Finalize":
+        return (
+          <div>
+            <h1 className="heading-headline-lg text-[var(--color-text-primary)] mb-3">
+              Finalisasi
+            </h1>
+            <p className="text-base text-[var(--color-text-secondary)] mb-6">
+              Periksa kembali semua data, lalu generate PRD Anda.
+            </p>
+            <div className="bg-[var(--color-surface-canvas)] p-6 rounded-xl border border-[var(--color-border-subtle)] shadow-sm space-y-4">
+              <div>
+                <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                  Nama Produk
+                </div>
+                <div className="text-base font-semibold text-[var(--color-text-primary)]">
+                  {form.productName || "(belum diisi)"}
+                </div>
+              </div>
+              {form.problemDescription && (
+                <div>
+                  <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                    Deskripsi Masalah
+                  </div>
+                  <div className="text-sm text-[var(--color-text-primary)] leading-relaxed">
+                    {form.problemDescription}
+                  </div>
+                </div>
+              )}
+              {form.targetUsers && (
+                <div>
+                  <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                    Target Pengguna
+                  </div>
+                  <div className="text-sm text-[var(--color-text-primary)]">
+                    {form.targetUsers}
+                  </div>
+                </div>
+              )}
+              {form.coreFeatures && (
+                <div>
+                  <div className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-secondary)] mb-1">
+                    Fitur Utama
+                  </div>
+                  <div className="text-sm text-[var(--color-text-primary)]">
+                    {form.coreFeatures}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button className="w-full mt-6 py-4 rounded-xl bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-ai-accent)] text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm cursor-pointer">
+              <Sparkles className="w-5 h-5" /> Generate PRD
+            </button>
+          </div>
+        );
+      default:
+        return null;
     }
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-background)]">
-      <Sidebar />
+    <div className="min-h-screen bg-[var(--color-surface-background)] flex flex-col">
+      {/* Wizard Header (Focused task, global nav suppressed) */}
+      <header className="w-full bg-[var(--color-surface-canvas)] border-b border-[var(--color-border-subtle)] h-16 flex items-center justify-between px-6 sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <FileText className="w-5 h-5 text-[var(--color-text-primary)] fill-current" />
+          <span className="font-heading text-xl font-bold text-[var(--color-text-primary)]">
+            PRD.ai
+          </span>
+          <span className="text-sm text-[var(--color-text-secondary)] ml-3 border-l border-[var(--color-border-subtle)] pl-4 hidden sm:inline">
+            Pembuatan Dokumen Baru
+          </span>
+        </div>
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-center p-2 rounded-full hover:bg-[var(--color-surface-container-high)] transition-colors text-[var(--color-text-secondary)]"
+        >
+          <X className="w-5 h-5" />
+        </Link>
+      </header>
 
-      <div className="md:ml-64 flex flex-col min-h-screen">
-        <DashboardHeader />
+      {/* Main Content Canvas */}
+      <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 flex flex-col">
+        {/* Progress Stepper */}
+        <div className="w-full mb-8">
+          <div className="flex items-center justify-between relative">
+            {/* Line background */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-[var(--color-border-subtle)] -z-10"></div>
+            {/* Active Line */}
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-[var(--color-primary)] -z-10 transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-[var(--container-max)] mx-auto space-y-6">
-            {/* Back link */}
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" /> Kembali ke Dashboard
-            </Link>
+            {STEPS.map((step, idx) => {
+              const isActive = idx <= currentIdx;
+              return (
+                <div
+                  key={step}
+                  className="flex flex-col items-center gap-2 bg-[var(--color-surface-background)] px-2"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all ${
+                      isActive
+                        ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] border-[var(--color-primary)]"
+                        : "bg-[var(--color-surface-canvas)] text-[var(--color-text-secondary)] border-[var(--color-border-subtle)]"
+                    }`}
+                  >
+                    {idx + 1}
+                  </div>
+                  <span
+                    className={`text-xs font-mono uppercase tracking-wider transition-colors ${
+                      isActive
+                        ? "text-[var(--color-text-primary)]"
+                        : "text-[var(--color-text-secondary)]"
+                    }`}
+                  >
+                    {step}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Progress bar */}
-            <div className="bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="font-heading text-xl font-bold text-[var(--color-text-primary)]">
-                  Buat PRD Baru
-                </h1>
-                <div className="label-caps text-[var(--color-text-secondary)]">
-                  Langkah {currentIndex + 1} dari {stepOrder.length}
+        {/* Split Layout Area */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1">
+          {/* Left: Form Input Area */}
+          <div className="col-span-1 md:col-span-8 flex flex-col gap-6">
+            {renderStepContent()}
+          </div>
+
+          {/* Right: AI Tips Panel */}
+          <div className="col-span-1 md:col-span-4">
+            <div className="sticky top-24 bg-[var(--color-surface-canvas)] rounded-xl border border-[var(--color-border-subtle)] shadow-sm overflow-hidden flex flex-col">
+              {/* AI Header */}
+              <div className="bg-gradient-to-r from-[var(--color-surface-background)] to-[var(--color-primary-fixed)]/20 p-4 border-b border-[var(--color-border-subtle)] flex items-center gap-3">
+                <IconAutoAwesome className="w-5 h-5 text-[var(--color-ai-accent)]" />
+                <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                  Tips dari AI
+                </h3>
+              </div>
+              {/* Content */}
+              <div className="p-4 flex flex-col gap-4">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-[var(--color-text-secondary)] mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-[var(--color-text-primary)] block">
+                      Fokus pada Masalah, Bukan Solusi
+                    </span>
+                    <span className="text-xs text-[var(--color-text-secondary)] mt-1 block">
+                      Pada tahap Deskripsi Masalah, hindari menyebutkan fitur
+                      aplikasi. Jelaskan metrik apa yang menurun atau rasa sakit
+                      (pain point) pengguna saat ini.
+                    </span>
+                  </div>
+                </div>
+                <div className="w-full h-px bg-[var(--color-border-subtle)]"></div>
+                <div className="flex items-start gap-3">
+                  <UserSearch className="w-5 h-5 text-[var(--color-text-secondary)] mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-[var(--color-text-primary)] block">
+                      Spesifikkan Target Pengguna
+                    </span>
+                    <span className="text-xs text-[var(--color-text-secondary)] mt-1 block">
+                      &quot;Semua orang&quot; bukanlah target yang baik. Coba
+                      sebutkan rentang usia, profesi, atau kebiasaan teknologi
+                      mereka.
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              {/* Step indicators */}
-              <div className="flex items-center gap-0 mb-6">
-                {stepOrder.map((step, idx) => (
-                  <React.Fragment key={step}>
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                          idx <= currentIndex
-                            ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
-                            : "bg-[var(--color-surface-container-highest)] text-[var(--color-text-secondary)]"
-                        }`}
-                      >
-                        {idx < currentIndex ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          idx + 1
-                        )}
-                      </div>
-                      <span
-                        className={`text-sm font-medium hidden sm:inline ${
-                          idx <= currentIndex
-                            ? "text-[var(--color-text-primary)]"
-                            : "text-[var(--color-text-secondary)]"
-                        }`}
-                      >
-                        {step === "info"
-                          ? "Info"
-                          : step === "template"
-                            ? "Template"
-                            : "Review"}
-                      </span>
-                    </div>
-                    {idx < stepOrder.length - 1 && (
-                      <div className="flex-1 h-px bg-[var(--color-border-subtle)] mx-3 relative">
-                        <div
-                          className="absolute inset-0 bg-[var(--color-primary)] transition-all duration-300"
-                          style={{
-                            width: `${
-                              idx < currentIndex
-                                ? "100%"
-                                : idx === currentIndex
-                                  ? "0%"
-                                  : "0%"
-                            }`,
-                          }}
-                        />
-                      </div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-
-              {/* Step content */}
-              <div className="pt-4">
-                {currentStep === "info" && (
-                  <StepInfo form={form} onChange={updateForm} />
-                )}
-                {currentStep === "template" && (
-                  <StepTemplate
-                    selectedId={form.templateId}
-                    onSelect={(id) => updateForm({ templateId: id })}
-                  />
-                )}
-                {currentStep === "review" && (
-                  <StepReview
-                    form={form}
-                    onGenerate={handleGenerate}
-                    generating={generating}
-                    error={error}
-                  />
-                )}
-              </div>
-
-              {/* Navigation buttons */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--color-border-subtle)]">
-                <div>
-                  {currentStep !== "info" && (
-                    <Button variant="ghost" onClick={goBack} className="gap-1.5">
-                      <ArrowLeft className="w-4 h-4" /> Sebelumnya
-                    </Button>
-                  )}
-                </div>
-                <div>
-                  {currentStep !== "review" && (
-                    <Button
-                      onClick={goNext}
-                      className="gap-1.5"
-                      disabled={currentStep === "info" && !form.title.trim()}
-                    >
-                      Selanjutnya <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
+              {/* Generative CTA */}
+              <div className="p-4 bg-[var(--color-surface-container-low)] mt-auto">
+                <button className="w-full py-2 px-4 rounded-lg bg-[var(--color-surface-canvas)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm font-medium flex items-center justify-center gap-2 hover:border-[var(--color-ai-accent)] hover:text-[var(--color-ai-accent)] transition-colors cursor-pointer">
+                  <IconMagicButton className="w-4 h-4" />
+                  Bantu Saya Menulis
+                </button>
               </div>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+
+        {/* Action Footer */}
+        <div className="w-full mt-8 pt-4 border-t border-[var(--color-border-subtle)] flex items-center justify-between">
+          <button
+            onClick={goBack}
+            disabled={currentIdx === 0}
+            className={`px-6 py-3 rounded-lg border border-[var(--color-border-subtle)] text-sm font-medium transition-colors flex items-center gap-2 ${
+              currentIdx === 0
+                ? "opacity-30 cursor-not-allowed"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-container-low)] cursor-pointer"
+            }`}
+          >
+            <ArrowLeft className="w-5 h-5" /> Previous
+          </button>
+          <button
+            onClick={goNext}
+            disabled={currentIdx === STEPS.length - 1}
+            className={`px-6 py-3 rounded-lg text-sm font-medium transition-opacity flex items-center gap-2 shadow-sm ${
+              currentIdx === STEPS.length - 1
+                ? "opacity-30 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:opacity-90 cursor-pointer"
+            }`}
+          >
+            {currentIdx === STEPS.length - 1 ? "Complete" : "Next Step"}
+            {currentIdx < STEPS.length - 1 && <ArrowRight className="w-5 h-5" />}
+          </button>
+        </div>
+      </main>
     </div>
   );
 }
