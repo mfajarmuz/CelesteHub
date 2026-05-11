@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { runGeminiPrompt } from "@/lib/ai";
 
 type GeneratorInput = {
   title?: string;
@@ -31,7 +32,7 @@ function bulletList(items: string[], fallback: string[]) {
   return source.map((item) => `- ${item}`).join("\n");
 }
 
-function buildPRDContent(input: GeneratorInput) {
+function buildPRDContent(input: GeneratorInput, fallbackReason?: string) {
   const productName = (input.productName || input.title || "Produk Baru").trim();
   const problemDescription = (input.problemDescription || "Masalah utama belum dijelaskan secara rinci.").trim();
   const targetUsers = (input.targetUsers || "Pengguna utama produk").trim();
@@ -122,6 +123,7 @@ function buildPRDContent(input: GeneratorInput) {
       productName,
       targetUsers,
       language: input.language || "id",
+      ...(fallbackReason ? { fallbackReason } : {}),
       sourceInputs: {
         problemDescription: input.problemDescription || "",
         coreFeatures: input.coreFeatures || "",
@@ -133,6 +135,86 @@ function buildPRDContent(input: GeneratorInput) {
         constraints: input.constraints || "",
         outOfScope: input.outOfScope || "",
       },
+    },
+  };
+}
+
+function stripCodeFence(value: string) {
+  return value
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+}
+
+type GeneratedSection = {
+  title?: string;
+  content?: string;
+};
+
+type GeneratedPayload = {
+  sections?: GeneratedSection[];
+  meta?: Record<string, unknown>;
+};
+
+async function generatePRDWithAI(input: GeneratorInput) {
+  const prompt = `Anda adalah product strategist senior dan technical writer.
+Tulis Product Requirements Document (PRD) yang detail, konkret, dan usable dalam Bahasa Indonesia.
+
+Konteks produk:
+- Judul/produk: ${input.productName || input.title || "Produk Baru"}
+- Problem statement: ${input.problemDescription || "-"}
+- Target users: ${input.targetUsers || "-"}
+- Core features: ${input.coreFeatures || "-"}
+- Tech stack: ${input.techStack || "-"}
+- Platform: ${input.platform || "-"}
+- Integrations: ${input.integrations || "-"}
+- Business goals: ${input.businessGoals || "-"}
+- Success metrics: ${input.successMetrics || "-"}
+- Constraints: ${input.constraints || "-"}
+- Out of scope: ${input.outOfScope || "-"}
+- Template ID: ${input.templateId || "-"}
+- Bahasa output: ${input.language || "id"}
+
+Instruksi:
+- Output HARUS JSON valid tanpa markdown fence.
+- Struktur HARUS:
+{
+  "sections": [
+    { "title": "Executive Summary", "content": "..." }
+  ],
+  "meta": {
+    "generatedBy": "gemini-cli",
+    "generatedAt": "ISO",
+    "language": "id"
+  }
+}
+- Minimal 8 sections.
+- Setiap section harus punya title dan content yang substantive, tidak boleh kosong, tidak boleh placeholder.
+- Section yang wajib dicakup minimal: Executive Summary, Problem Statement, Target Users, Goals & Success Metrics, Core Features, User Stories, Functional Requirements, Non-Functional Requirements, Technical Considerations, Risks & Open Questions, Launch Plan.
+- Jangan keluarkan teks apa pun di luar JSON.`;
+
+  const raw = await runGeminiPrompt(prompt);
+  const parsed = JSON.parse(stripCodeFence(raw)) as GeneratedPayload;
+  const sections = Array.isArray(parsed.sections)
+    ? parsed.sections
+        .map((section) => ({
+          title: section.title?.trim() || "",
+          content: section.content?.trim() || "",
+        }))
+        .filter((section) => section.title && section.content)
+    : [];
+
+  if (sections.length < 8) {
+    throw new Error("AI response did not include enough complete sections.");
+  }
+
+  return {
+    sections,
+    meta: {
+      ...(parsed.meta || {}),
+      generatedBy: "gemini-cli",
+      generatedAt: new Date().toISOString(),
+      language: input.language || "id",
     },
   };
 }
@@ -223,7 +305,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const generated = buildPRDContent({ ...body, productName, language });
+    let generated;
+
+    try {
+      generated = await generatePRDWithAI({ ...body, productName, language });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown AI generation error";
+      generated = buildPRDContent(
+        { ...body, productName, language },
+        `AI generation fallback: ${message}`
+      );
+    }
 
     const prd = await prisma.prdDocument.create({
       data: {

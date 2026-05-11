@@ -57,19 +57,26 @@ const DEFAULT_SECTIONS: Omit<PRDSection, "id">[] = [
 
 function SectionContent({
   section,
+  isActive,
+  onSelect,
   onUpdate,
   onTitleUpdate,
 }: {
   section: PRDSection;
+  isActive: boolean;
+  onSelect: (id: string) => void;
   onUpdate: (id: string, content: string) => void;
   onTitleUpdate: (id: string, title: string) => void;
 }) {
-  const [regenerating, setRegenerating] = useState(false);
-
   return (
     <section
       id={`section-${section.id}`}
-      className="relative group mb-6 pb-3 border-b border-transparent hover:border-[var(--color-surface-container)] transition-colors"
+      className={`relative group mb-6 pb-3 border-b transition-colors ${
+        isActive
+          ? "border-[var(--color-secondary)]/40"
+          : "border-transparent hover:border-[var(--color-surface-container)]"
+      }`}
+      onClick={() => onSelect(section.id)}
     >
       {/* Section Header */}
       <div className="flex items-center gap-2 mb-3">
@@ -78,6 +85,7 @@ function SectionContent({
           contentEditable
           suppressContentEditableWarning
           className="font-heading text-[24px] font-semibold text-[var(--color-text-primary)] outline-none flex-1"
+          onFocus={() => onSelect(section.id)}
           onBlur={(e) => {
             const nextTitle = e.currentTarget.innerText.trim();
             if (nextTitle && nextTitle !== section.title) {
@@ -94,6 +102,7 @@ function SectionContent({
         contentEditable
         suppressContentEditableWarning
         className="text-sm text-[var(--color-text-secondary)] leading-relaxed outline-none min-h-[40px]"
+        onFocus={() => onSelect(section.id)}
         onBlur={(e) => {
           const text = e.currentTarget.innerText;
           if (text.trim() !== section.content.trim()) {
@@ -106,7 +115,7 @@ function SectionContent({
       {/* Floating AI Action */}
       <div className="absolute -right-4 -top-4 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-2 group-hover:translate-y-0" contentEditable="false">
         <button
-          onClick={() => setRegenerating(true)}
+          onClick={() => onSelect(section.id)}
           className="bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-ai-accent)] text-white px-3 py-1.5 rounded-full text-[13px] font-medium flex items-center gap-1.5 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
         >
           <Sparkles className="w-4 h-4" />
@@ -126,8 +135,16 @@ interface ChatMessage {
 
 function AICopilotPanel({
   onClose,
+  documentTitle,
+  sections,
+  activeSection,
+  onApplyToCurrentSection,
 }: {
   onClose: () => void;
+  documentTitle: string;
+  sections: PRDSection[];
+  activeSection: PRDSection | null;
+  onApplyToCurrentSection: (content: string) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -136,27 +153,61 @@ function AICopilotPanel({
     },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const suggestedActions = [
     { icon: Plus, text: "Add technical requirements for the API integration" },
     { icon: MessageSquare, text: "Make the Problem Statement more concise" },
   ];
 
-  function handleSend() {
-    if (!input.trim()) return;
-    setMessages((prev) => [...prev, { role: "user", text: input }]);
-    setInput("");
+  const lastAssistantMessage = [...messages].reverse().find((msg) => msg.role === "assistant");
 
-    // Simulate AI response
-    setTimeout(() => {
+  async function sendPrompt(promptText: string) {
+    if (!promptText.trim()) return;
+
+    setMessages((prev) => [...prev, { role: "user", text: promptText }]);
+    setInput("");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: promptText,
+          documentTitle,
+          sections: sections.map((section) => ({
+            title: section.title,
+            content: section.content,
+          })),
+          activeSection: activeSection?.title || "",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to get AI response");
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: "Based on your request, I've analyzed the current document. Here are my suggestions...\n\nYou might want to consider adding specific API endpoints, authentication methods, and error handling strategies in the technical requirements section.",
+          text: data.message,
         },
       ]);
-    }, 1500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal menghubungi AI co-pilot.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSend() {
+    void sendPrompt(input);
   }
 
   return (
@@ -208,22 +259,26 @@ function AICopilotPanel({
         ))}
 
         {/* Suggested Actions */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+            {error}
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)]">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            AI sedang menyiapkan jawaban...
+          </div>
+        )}
+
         {messages.length === 1 && (
           <div className="grid grid-cols-1 gap-2 mt-2">
             {suggestedActions.map((action, i) => (
               <button
                 key={i}
                 onClick={() => {
-                  setMessages((prev) => [...prev, { role: "user", text: action.text }]);
-                  setTimeout(() => {
-                    setMessages((prev) => [
-                      ...prev,
-                      {
-                        role: "assistant",
-                        text: "I'll help you with that. Let me analyze the document and provide suggestions...",
-                      },
-                    ]);
-                  }, 1000);
+                  void sendPrompt(action.text);
                 }}
                 className="text-left p-2.5 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-container-lowest)] hover:border-[var(--color-secondary)] hover:bg-[var(--color-secondary-fixed)]/10 transition-colors group flex items-start gap-2 cursor-pointer"
               >
@@ -255,12 +310,20 @@ function AICopilotPanel({
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!input.trim() || loading}
             className="absolute right-2 bottom-2 w-7 h-7 rounded bg-[var(--color-primary)] text-[var(--color-on-primary)] flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
+        {lastAssistantMessage && activeSection && (
+          <button
+            onClick={() => onApplyToCurrentSection(lastAssistantMessage.text)}
+            className="mt-3 w-full rounded-lg border border-[var(--color-secondary)]/30 bg-[var(--color-secondary-fixed)]/10 px-3 py-2 text-[13px] font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-secondary-fixed)]/20 transition-colors cursor-pointer"
+          >
+            Apply to current section ({activeSection.title})
+          </button>
+        )}
         <div className="mt-2 text-center">
           <span className="text-[11px] text-[var(--color-text-secondary)]">
             AI may produce inaccurate information.
@@ -490,6 +553,8 @@ export default function EditorPage() {
                   <SectionContent
                     key={section.id}
                     section={section}
+                    isActive={activeSection === section.id}
+                    onSelect={setActiveSection}
                     onUpdate={updateSection}
                     onTitleUpdate={updateSectionTitle}
                   />
@@ -500,7 +565,18 @@ export default function EditorPage() {
         </main>
 
         {/* Right Panel: AI Co-pilot */}
-        {aiPanelOpen && <AICopilotPanel onClose={() => setAiPanelOpen(false)} />}
+        {aiPanelOpen && (
+          <AICopilotPanel
+            onClose={() => setAiPanelOpen(false)}
+            documentTitle={title || prd?.title || "Untitled PRD"}
+            sections={sections}
+            activeSection={sections.find((section) => section.id === activeSection) || null}
+            onApplyToCurrentSection={(content) => {
+              if (!activeSection) return;
+              updateSection(activeSection, content);
+            }}
+          />
+        )}
       </div>
     </div>
   );
