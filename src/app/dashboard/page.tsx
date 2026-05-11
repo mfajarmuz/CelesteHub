@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import {
   Search,
   Grid3X3,
@@ -120,12 +121,16 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="mt-6 flex items-center gap-3">
-                  <Button size="lg" className="gap-2">
-                    <Sparkles className="w-4 h-4" /> Generate PRD
-                  </Button>
-                  <Button variant="ghost" size="lg">
-                    <LayoutTemplate className="w-4 h-4" /> Browse Templates
-                  </Button>
+                  <Link href="/dashboard/new">
+                    <Button size="lg" className="gap-2">
+                      <Sparkles className="w-4 h-4" /> Generate PRD
+                    </Button>
+                  </Link>
+                  <Link href="/templates">
+                    <Button variant="ghost" size="lg">
+                      <LayoutTemplate className="w-4 h-4" /> Browse Templates
+                    </Button>
+                  </Link>
                 </div>
               </div>
 

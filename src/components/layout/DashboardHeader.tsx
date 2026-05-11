@@ -33,7 +33,7 @@ export function DashboardHeader({ onNewPRD }: DashboardHeaderProps) {
             Library
           </Link>
           <Link
-            href="#"
+            href="/templates"
             className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors border-b-2 border-transparent pb-1"
           >
             Templates
