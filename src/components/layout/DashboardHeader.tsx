@@ -52,7 +52,7 @@ export function DashboardHeader({ onNewPRD }: DashboardHeaderProps) {
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">New Document</span>
         </Button>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-secondary)] to-[var(--color-ai-accent)] flex items-center justify-center text-white text-xs font-bold">
+        <div className="w-8 h-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center text-white text-xs font-bold">
           U
         </div>
       </div>

@@ -315,19 +315,23 @@ function StepReview({
         </div>
       )}
 
-      <div className="bg-gradient-to-r from-[var(--color-ai-accent)]/10 to-[var(--color-secondary)]/10 rounded-xl p-6 border border-[var(--color-ai-accent)]/20">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[var(--color-ai-accent)]/20 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-6 h-6 text-[var(--color-ai-accent)]" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
-              Siap di-Generate
+      {/* DESIGN.md §5.4 — AI callout: bg #F5F3FF, text #6D28D9, left bar #8B5CF6 */}
+      <div className="bg-[var(--color-ai-accent-bg)] rounded-xl overflow-hidden border border-[var(--color-ai-accent)]/20">
+        <div className="flex">
+          <div className="w-1 bg-[var(--color-ai-accent)] flex-shrink-0" />
+          <div className="flex items-center gap-4 p-6">
+            <div className="w-12 h-12 rounded-full bg-[var(--color-ai-accent)]/20 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-6 h-6 text-[var(--color-ai-accent)]" />
             </div>
-            <div className="text-xs text-[var(--color-text-secondary)]">
-              AI akan membuat PRD berdasarkan informasi di atas. Proses ini
-              memakan waktu sekitar 10-20 detik. Anda bisa mengedit hasilnya
-              nanti.
+            <div>
+              <div className="text-sm font-semibold text-[var(--color-ai-accent-text)] mb-1">
+                Siap di-Generate
+              </div>
+              <div className="text-xs text-[var(--color-ai-accent-text)]/70">
+                AI akan membuat PRD berdasarkan informasi di atas. Proses ini
+                memakan waktu sekitar 10-20 detik. Anda bisa mengedit hasilnya
+                nanti.
+              </div>
             </div>
           </div>
         </div>

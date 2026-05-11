@@ -418,7 +418,7 @@ export default function TemplatesPage() {
                 <Button variant="ghost" size="sm">
                   <Bell className="w-4 h-4" />
                 </Button>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-secondary)] to-[var(--color-ai-accent)] flex items-center justify-center text-white text-xs font-bold">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center text-white text-xs font-bold">
                   U
                 </div>
               </div>

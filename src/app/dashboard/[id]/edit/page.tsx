@@ -143,7 +143,7 @@ function SectionEditor({
             className="border-0 focus:ring-0 mt-3 min-h-[100px] resize-y bg-transparent p-0 text-sm leading-relaxed"
           />
           <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--color-border-subtle)]">
-            <button className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-ai-accent)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-ai-accent)]/5 cursor-pointer">
+            <button className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-ai-accent-text)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-ai-accent-bg)] cursor-pointer">
               <Sparkles className="w-3 h-3" /> AI Suggest
             </button>
             <button className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--color-surface-container-low)] cursor-pointer">
@@ -224,8 +224,8 @@ function AIAssistPanel({
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {suggestions.length === 0 && !loading && (
           <div className="text-center py-8">
-            <div className="w-12 h-12 rounded-full bg-[var(--color-ai-accent)]/10 flex items-center justify-center mx-auto mb-3">
-              <Sparkles className="w-5 h-5 text-[var(--color-ai-accent)]" />
+            <div className="w-12 h-12 rounded-full bg-[var(--color-ai-accent-bg)] flex items-center justify-center mx-auto mb-3">
+              <Sparkles className="w-5 h-5 text-[var(--color-ai-accent-text)]" />
             </div>
             <p className="text-sm text-[var(--color-text-secondary)]">
               Tulis prompt di atas untuk meminta AI menulis konten PRD.
@@ -524,7 +524,7 @@ export default function EditorPage() {
                       <div
                         className={`w-2 h-2 rounded-full ${
                           s === "draft"
-                            ? "bg-amber-400"
+                            ? "bg-[var(--color-badge-draft-text)]"
                             : s === "review"
                               ? "bg-[var(--color-secondary)]"
                               : "bg-[var(--color-success-green)]"
@@ -567,7 +567,7 @@ export default function EditorPage() {
             </span>
           </Button>
 
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-secondary)] to-[var(--color-ai-accent)] flex items-center justify-center text-white text-xs font-bold ml-1">
+          <div className="w-8 h-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center text-white text-xs font-bold ml-1">
             U
           </div>
         </div>

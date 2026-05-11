@@ -65,10 +65,28 @@
   --color-surface-background: #F8FAFC;
   --color-surface-canvas: #FFFFFF;
   --color-ai-accent: #8B5CF6;
+  --color-ai-accent-bg: #F5F3FF;
+  --color-ai-accent-text: #6D28D9;
   --color-success-green: #10B981;
   --color-border-subtle: #E2E8F0;
   --color-text-primary: #0F172A;
   --color-text-secondary: #64748B;
+
+  /* Semantic status colors — DESIGN.md §2.4 */
+  --color-badge-draft-bg: #FFF8E1;
+  --color-badge-draft-text: #92400E;
+  --color-badge-final-bg: #D1FAE5;
+  --color-badge-final-text: #065F46;
+  --color-badge-warning-bg: #FFF3E0;
+  --color-badge-warning-text: #92400E;
+  --color-badge-critical-bg: #FFEBEE;
+  --color-badge-critical-text: #B91C1C;
+  --color-badge-info-bg: #EFF6FF;
+  --color-badge-info-text: #1D4ED8;
+  --color-badge-success-bg: #ECFDF5;
+  --color-badge-success-text: #065F46;
+  --color-badge-ai-bg: #F5F3FF;
+  --color-badge-ai-text: #6D28D9;
 
   /* Border radius */
   --radius-sm: 0.25rem;
@@ -119,10 +137,26 @@
   --color-error: var(--color-error);
   --color-on-error: var(--color-on-error);
   --color-ai-accent: var(--color-ai-accent);
+  --color-ai-accent-bg: var(--color-ai-accent-bg);
+  --color-ai-accent-text: var(--color-ai-accent-text);
   --color-success: var(--color-success-green);
   --color-border-subtle: var(--color-border-subtle);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
+  --color-badge-draft-bg: var(--color-badge-draft-bg);
+  --color-badge-draft-text: var(--color-badge-draft-text);
+  --color-badge-final-bg: var(--color-badge-final-bg);
+  --color-badge-final-text: var(--color-badge-final-text);
+  --color-badge-warning-bg: var(--color-badge-warning-bg);
+  --color-badge-warning-text: var(--color-badge-warning-text);
+  --color-badge-critical-bg: var(--color-badge-critical-bg);
+  --color-badge-critical-text: var(--color-badge-critical-text);
+  --color-badge-info-bg: var(--color-badge-info-bg);
+  --color-badge-info-text: var(--color-badge-info-text);
+  --color-badge-success-bg: var(--color-badge-success-bg);
+  --color-badge-success-text: var(--color-badge-success-text);
+  --color-badge-ai-bg: var(--color-badge-ai-bg);
+  --color-badge-ai-text: var(--color-badge-ai-text);
 
   --font-heading: 'Manrope', sans-serif;
   --font-body: 'Inter', sans-serif;
